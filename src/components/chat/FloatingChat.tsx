@@ -64,7 +64,7 @@ export default function FloatingChat() {
     const fetchMessages = async () => {
       const { data, error } = await supabase
         .from("chat_messages")
-        .select("*, profiles(full_name, role)")
+        .select("*, profiles!chat_messages_sender_id_fkey(full_name, role)")
         .is("order_id", null)
         .or(`sender_id.eq.${user.id},customer_id.eq.${user.id}`)
         .order("created_at", { ascending: true });

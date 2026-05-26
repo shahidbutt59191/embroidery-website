@@ -42,7 +42,7 @@ export default function OrderChat({ orderId, currentUserId }: { orderId: string;
     const fetchMessages = async () => {
       const { data } = await supabase
         .from("chat_messages")
-        .select("*, profiles(full_name, role)")
+        .select("*, profiles!chat_messages_sender_id_fkey(full_name, role)")
         .eq("order_id", orderId)
         .order("created_at", { ascending: true });
 

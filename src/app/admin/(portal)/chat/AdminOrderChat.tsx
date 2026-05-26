@@ -58,7 +58,7 @@ export default function AdminOrderChat({
     const fetchMessages = async () => {
       let query = supabase
         .from("chat_messages")
-        .select("*, profiles(full_name, role)")
+        .select("*, profiles!chat_messages_sender_id_fkey(full_name, role)")
         .order("created_at", { ascending: true });
 
       if (isSupport && customerId) {

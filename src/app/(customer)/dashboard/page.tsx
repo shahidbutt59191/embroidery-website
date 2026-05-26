@@ -27,6 +27,7 @@ export default async function DashboardPage() {
 
   const unreadMap: Record<string, number> = {};
   unreadMsgs?.forEach((m) => {
+    if (!m.order_id) return; // skip support messages
     unreadMap[m.order_id] = (unreadMap[m.order_id] || 0) + 1;
   });
 
