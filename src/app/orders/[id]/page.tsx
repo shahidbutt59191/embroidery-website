@@ -84,9 +84,9 @@ export default async function OrderDetailsPage({ params }: { params: Promise<{ i
             {/* Gig Info & Properties */}
             <div className="bg-white rounded-2xl shadow-sm border border-border overflow-hidden">
               <div className="p-6 border-b border-border bg-accent/10 flex items-center gap-4">
-                <img src={order.gigs?.image_url} alt="Gig" className="w-16 h-16 rounded-lg object-cover" />
+                <img src={(order.gigs as any)?.image_url} alt="Gig" className="w-16 h-16 rounded-lg object-cover" />
                 <div>
-                  <h2 className="font-bold text-lg text-foreground">{order.gigs?.title}</h2>
+                  <h2 className="font-bold text-lg text-foreground">{(order.gigs as any)?.title}</h2>
                   <p className="font-semibold text-primary">Total: ${order.total_price}</p>
                 </div>
               </div>

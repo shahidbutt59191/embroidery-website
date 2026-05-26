@@ -67,9 +67,9 @@ export default async function DashboardPage() {
                   activeOrders.map(order => (
                     <Link key={order.id} href={`/orders/${order.id}`} className="block bg-white rounded-2xl border border-border shadow-sm hover:border-primary/50 transition-colors overflow-hidden">
                       <div className="p-4 flex items-center gap-4">
-                        <img src={order.gigs?.image_url} alt="Gig" className="w-16 h-16 rounded-xl object-cover" />
+                        <img src={(order.gigs as any)?.image_url} alt="Gig" className="w-16 h-16 rounded-xl object-cover" />
                         <div className="flex-1">
-                          <h3 className="font-semibold text-foreground">{order.gigs?.title}</h3>
+                          <h3 className="font-semibold text-foreground">{(order.gigs as any)?.title}</h3>
                           <div className="flex items-center gap-3 mt-1 text-sm text-muted-foreground">
                             <span>Order #{order.id.split('-')[0]}</span>
                             <span>•</span>
@@ -107,7 +107,7 @@ export default async function DashboardPage() {
                           <Package className="w-5 h-5 text-muted-foreground" />
                         </div>
                         <div className="flex-1">
-                          <h3 className="font-semibold text-foreground text-sm">{order.gigs?.title}</h3>
+                          <h3 className="font-semibold text-foreground text-sm">{(order.gigs as any)?.title}</h3>
                           <span className="text-xs text-muted-foreground">{new Date(order.created_at).toLocaleDateString()}</span>
                         </div>
                         <div className="font-medium text-foreground text-sm">
