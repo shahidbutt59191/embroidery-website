@@ -5,7 +5,7 @@ import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
-export default function LogoutButton() {
+export default function LogoutButton({ variant = "light" }: { variant?: "light" | "dark" }) {
   const [loading, setLoading] = useState(false);
   const supabase = createClient();
   const router = useRouter();
@@ -18,10 +18,14 @@ export default function LogoutButton() {
   };
 
   return (
-    <button 
+    <button
       onClick={handleLogout}
       disabled={loading}
-      className="text-sm font-medium hover:text-red-500 transition-colors flex items-center gap-2 disabled:opacity-50"
+      className={`text-sm font-medium transition-colors flex items-center gap-2 disabled:opacity-50 ${
+        variant === "dark"
+          ? "text-white/40 hover:text-red-400"
+          : "text-muted-foreground hover:text-red-500"
+      }`}
     >
       {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <LogOut className="w-4 h-4" />}
       Sign Out

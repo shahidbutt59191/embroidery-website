@@ -1,5 +1,7 @@
 import GigForm from "./GigForm";
 
+export const dynamic = "force-dynamic";
+
 export default function NewGigPage() {
   return (
     <div className="space-y-6 max-w-3xl mx-auto">
