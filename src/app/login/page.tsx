@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { createClient } from "@/lib/supabase/client"; // Humari apni banayi hui config file
+import { createClient } from "@/lib/supabase/client";
 import Link from "next/link";
 import { Mail, Lock, LogIn } from "lucide-react";
 
@@ -10,26 +10,39 @@ export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState("");
   const router = useRouter();
   const supabase = createClient();
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    setErrorMsg("");
 
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
 
     if (error) {
-      alert("Error: " + error.message);
-    } else {
-      const params = new URLSearchParams(window.location.search);
-      const redirectUrl = params.get('redirect') || '/dashboard';
-      router.push(redirectUrl);
-      router.refresh();
+      setErrorMsg(error.message);
+      setLoading(false);
+      return;
     }
+
+    // Check role to redirect correctly
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("role")
+      .eq("id", data.user.id)
+      .single();
+
+    const params = new URLSearchParams(window.location.search);
+    const redirectParam = params.get("redirect");
+
+    if (profile?.role === "admin") {
+      router.push(redirectParam || "/admin");
+    } else {
+      router.push(redirectParam || "/dashboard");
+    }
+    router.refresh();
     setLoading(false);
   };
 
@@ -55,6 +68,11 @@ export default function LoginPage() {
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
         <div className="bg-white py-8 px-4 shadow sm:rounded-2xl sm:px-10 border border-border/50">
           <form className="space-y-6" onSubmit={handleSignIn}>
+            {errorMsg && (
+              <div className="bg-red-50 text-red-600 text-sm p-3 rounded-xl border border-red-100 font-medium">
+                {errorMsg}
+              </div>
+            )}
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-foreground">
                 Email address
