@@ -4,6 +4,7 @@ import Link from "next/link";
 import { ArrowLeft, CheckCircle2, Package, Clock, Download } from "lucide-react";
 import OrderChat from "./OrderChat";
 import AdminFileUploader from "./AdminUploader";
+import CustomerApprovalCard from "./CustomerApprovalCard";
 
 export default async function OrderDetailsPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = await params;
@@ -147,6 +148,11 @@ export default async function OrderDetailsPage({ params }: { params: Promise<{ i
                 )}
               </div>
             </div>
+            
+            {isAdmin && <AdminFileUploader orderId={order.id} adminId={user.id} />}
+            {!isAdmin && order.status === 'delivered' && (
+              <CustomerApprovalCard orderId={order.id} userId={user.id} totalPrice={order.total_price} />
+            )}
             
           </div>
 

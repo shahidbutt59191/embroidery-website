@@ -12,7 +12,6 @@ export default function RegisterPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
-  const [role, setRole] = useState<"buyer" | "seller">("buyer");
   const [loading, setLoading] = useState(false);
 
   const handleSignUp = async (e: React.FormEvent) => {
@@ -25,7 +24,7 @@ export default function RegisterPage() {
       options: {
         data: {
           full_name: fullName,
-          role: role
+          role: 'customer'
         },
       },
     });
@@ -82,18 +81,7 @@ export default function RegisterPage() {
             />
           </div>
 
-          {/* Role Selection */}
-          <div>
-            <label className="block text-sm font-medium mb-1">Register as</label>
-            <select
-              value={role}
-              onChange={(e) => setRole(e.target.value as "buyer" | "seller")}
-              className="w-full p-3 border rounded-xl bg-gray-50 focus:ring-2 focus:ring-green-500 outline-none"
-            >
-              <option value="buyer">Buyer</option>
-              <option value="seller">Seller</option>
-            </select>
-          </div>
+          {/* Removed Role Selection (Default is customer) */}
 
           <button
             type="submit"

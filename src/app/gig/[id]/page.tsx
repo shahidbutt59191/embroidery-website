@@ -11,9 +11,6 @@ export default async function CustomerGigPage({ params }: { params: Promise<{ id
 
   // Check Auth Status
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) {
-    redirect("/login");
-  }
 
   // Fetch the gig
   const { data: gig, error: gigError } = await supabase
@@ -79,7 +76,7 @@ export default async function CustomerGigPage({ params }: { params: Promise<{ id
               <OrderForm 
                 gig={gig} 
                 properties={properties || []} 
-                userId={user.id} 
+                userId={user?.id || null} 
               />
             </div>
           </div>

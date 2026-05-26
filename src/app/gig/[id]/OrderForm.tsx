@@ -1,12 +1,12 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { CldUploadWidget } from "next-cloudinary";
 import { UploadCloud, Loader2, CheckCircle2 } from "lucide-react";
 
-export default function OrderForm({ gig, properties, userId }: { gig: any, properties: any[], userId: string }) {
+export default function OrderForm({ gig, properties, userId }: { gig: any, properties: any[], userId: string | null }) {
   const router = useRouter();
   const supabase = createClient();
   
@@ -16,6 +16,20 @@ export default function OrderForm({ gig, properties, userId }: { gig: any, prope
   const [specialInstructions, setSpecialInstructions] = useState("");
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
+
+  useEffect(() => {
+    // Check if there is a pending order in localStorage (user returning from login)
+    const saved = localStorage.getItem(`pendingOrder_${gig.id}`);
+    if (saved) {
+      try {
+        const data = JSON.parse(saved);
+        setSelections(data.selections || {});
+        setSpecialInstructions(data.specialInstructions || "");
+        setUploadedImage(data.uploadedImage || null);
+      } catch(e) {}
+      localStorage.removeItem(`pendingOrder_${gig.id}`);
+    }
+  }, [gig.id]);
 
   // Calculate Total Price
   const totalPrice = useMemo(() => {
@@ -52,6 +66,16 @@ export default function OrderForm({ gig, properties, userId }: { gig: any, prope
     }
     if (!uploadedImage) {
       setErrorMsg("Please upload a source image for digitizing.");
+      return;
+    }
+
+    if (!userId) {
+      localStorage.setItem(`pendingOrder_${gig.id}`, JSON.stringify({
+        selections,
+        specialInstructions,
+        uploadedImage
+      }));
+      router.push(`/login?redirect=/gig/${gig.id}`);
       return;
     }
 

@@ -29,8 +29,8 @@ export default function AdminFileUploader({ orderId, adminId }: { orderId: strin
     }]);
 
     if (!error) {
-      // Also update order status to completed if this is the final file
-      await supabase.from("orders").update({ status: 'completed' }).eq("id", orderId);
+      // Update order status to delivered so customer can approve it
+      await supabase.from("orders").update({ status: 'delivered' }).eq("id", orderId);
       router.refresh();
     }
     setLoading(false);

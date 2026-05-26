@@ -25,8 +25,9 @@ export default function LoginPage() {
     if (error) {
       alert("Error: " + error.message);
     } else {
-      alert("Login Kamyab!");
-      router.push("/marketplace"); // Kamyabi par marketplace par bhej dega
+      const params = new URLSearchParams(window.location.search);
+      const redirectUrl = params.get('redirect') || '/dashboard';
+      router.push(redirectUrl);
       router.refresh();
     }
     setLoading(false);
