@@ -18,9 +18,12 @@ export default async function MarketplacePage() {
     redirect("/login");
   }
 
-  // 2. Fetch Categories aur Gigs Database se
-  const { data: categories } = await supabase.from('categories').select('*');
-  const { data: gigs } = await supabase.from('gigs').select('*'); // NAYA: Gigs fetch kar rahe hain
+  // 2. Fetch Active Gigs from Database
+  const { data: gigs } = await supabase
+    .from('gigs')
+    .select('*')
+    .eq('is_active', true)
+    .order('created_at', { ascending: false });
 
   // 3. Logout Action
   const handleSignOut = async () => {
@@ -36,6 +39,9 @@ export default async function MarketplacePage() {
 
         {/* Top Bar: User Info & Logout */}
         <div className="flex justify-end items-center gap-4 mb-6">
+          <Link href="/orders" className="text-sm font-medium text-primary hover:underline">
+            My Orders
+          </Link>
           <span className="text-sm font-medium text-muted-foreground">
             Logged in as: <strong className="text-foreground">{user.email}</strong>
           </span>
@@ -52,7 +58,7 @@ export default async function MarketplacePage() {
           <div className="absolute top-0 right-0 w-64 h-64 bg-secondary/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
           <div className="relative z-10">
             <h1 className="text-3xl md:text-4xl font-bold mb-4 font-outfit">Embroidery Marketplace</h1>
-            <p className="text-white/80 mb-6 max-w-2xl">Find the perfect digitizer for your next embroidery project.</p>
+            <p className="text-white/80 mb-6 max-w-2xl">Find the perfect digitizing service for your next embroidery project.</p>
 
             <div className="flex flex-col sm:flex-row gap-4 max-w-3xl">
               <div className="relative flex-1">
@@ -70,40 +76,17 @@ export default async function MarketplacePage() {
           </div>
         </div>
 
-        {/* Dynamic Filters */}
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
-          <div className="flex items-center gap-2 overflow-x-auto pb-2 md:pb-0 w-full md:w-auto scrollbar-hide">
-            <button className="flex items-center gap-2 px-4 py-2 border border-border rounded-full bg-white hover:bg-accent transition-colors whitespace-nowrap text-sm font-medium">
-              <SlidersHorizontal className="w-4 h-4" />
-              All Filters
-            </button>
-
-            {categories?.map((cat) => (
-              <button key={cat.id} className="flex items-center gap-2 px-4 py-2 border border-border rounded-full bg-white hover:bg-primary hover:text-white transition-colors whitespace-nowrap text-sm font-medium">
-                {cat.name}
-              </button>
-            ))}
-          </div>
-
-          <div className="flex items-center gap-2 text-sm">
-            <span className="text-muted-foreground">Sort by:</span>
-            <button className="font-semibold text-foreground flex items-center gap-1">
-              Recommended <ChevronDown className="w-4 h-4" />
-            </button>
-          </div>
-        </div>
-
         <div className="mb-6 text-sm text-muted-foreground">
           <span className="font-semibold text-foreground">{gigs?.length || 0}</span> services available
         </div>
 
-        {/* Gigs Grid (Now completely Dynamic from Database) */}
+        {/* Gigs Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
           {gigs?.map((gig) => (
-            <Link key={gig.id} href={`/gig/${gig.id}`} className="group block bg-white rounded-xl border border-border overflow-hidden hover:shadow-xl transition-all duration-300">
+            <Link key={gig.id} href={`/gig/${gig.id}`} className="group block bg-white rounded-xl border border-border overflow-hidden hover:shadow-xl transition-all duration-300 flex flex-col h-full">
               <div className="relative aspect-[4/3] overflow-hidden">
                 <img
-                  src={gig.image_url}
+                  src={gig.image_url || "https://images.unsplash.com/photo-1620799139834-6b8f844fbe61?auto=format&fit=crop&q=80"}
                   alt={gig.title}
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 bg-gray-100"
                 />
@@ -112,32 +95,27 @@ export default async function MarketplacePage() {
                 </button>
               </div>
 
-              <div className="p-5">
-                <div className="flex items-center gap-3 mb-3">
-                  <img src={gig.seller_avatar} alt={gig.seller_name} className="w-8 h-8 rounded-full object-cover bg-gray-200" />
-                  <div>
-                    <h4 className="font-semibold text-sm text-foreground">{gig.seller_name}</h4>
-                    <p className="text-xs text-muted-foreground">{gig.seller_level}</p>
-                  </div>
-                </div>
-
-                <h3 className="font-medium text-foreground text-base mb-4 line-clamp-2 group-hover:text-primary transition-colors">
+              <div className="p-5 flex-1">
+                <h3 className="font-semibold text-foreground text-lg mb-2 line-clamp-2 group-hover:text-primary transition-colors">
                   {gig.title}
                 </h3>
-
-                <div className="flex items-center gap-1 mb-4">
-                  <Star className="w-4 h-4 fill-secondary text-secondary" />
-                  <span className="font-bold text-foreground text-sm">{gig.rating}</span>
-                  <span className="text-muted-foreground text-sm">({gig.reviews})</span>
-                </div>
+                <p className="text-sm text-muted-foreground line-clamp-2 mb-4">
+                  {gig.description}
+                </p>
               </div>
 
-              <div className="px-5 py-4 border-t border-border flex justify-between items-center bg-accent/20">
+              <div className="px-5 py-4 border-t border-border flex justify-between items-center bg-accent/10 mt-auto">
                 <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Starting At</span>
-                <span className="font-bold text-lg text-primary">${gig.price}</span>
+                <span className="font-bold text-xl text-primary">${gig.base_price}</span>
               </div>
             </Link>
           ))}
+          
+          {(!gigs || gigs.length === 0) && (
+            <div className="col-span-full py-12 text-center text-muted-foreground bg-white rounded-xl border border-dashed border-border">
+              No services available right now. Please check back later!
+            </div>
+          )}
         </div>
 
       </div>
