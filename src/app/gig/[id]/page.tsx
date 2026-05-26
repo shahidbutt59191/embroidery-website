@@ -23,8 +23,8 @@ export default async function CustomerGigPage({ params }: { params: Promise<{ id
     return (
       <div className="min-h-screen bg-accent/20 flex flex-col items-center justify-center p-4">
         <h1 className="text-2xl font-bold text-red-600 mb-4">Service Not Found</h1>
-        <Link href="/marketplace" className="text-primary hover:underline">
-          Return to Marketplace
+        <Link href="/#services" className="text-primary hover:underline">
+          Return to Services
         </Link>
       </div>
     );
@@ -43,8 +43,8 @@ export default async function CustomerGigPage({ params }: { params: Promise<{ id
   return (
     <div className="bg-accent/20 min-h-screen py-8">
       <div className="container mx-auto px-4 max-w-5xl">
-        <Link href="/marketplace" className="inline-flex items-center gap-2 text-muted-foreground hover:text-primary transition-colors mb-6 font-medium">
-          <ArrowLeft className="w-5 h-5" /> Back to Marketplace
+        <Link href="/#services" className="inline-flex items-center gap-2 text-muted-foreground hover:text-primary transition-colors mb-6 font-medium">
+          <ArrowLeft className="w-5 h-5" /> Back to Services
         </Link>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">

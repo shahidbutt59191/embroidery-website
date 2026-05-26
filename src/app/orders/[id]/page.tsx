@@ -43,7 +43,7 @@ export default async function OrderDetailsPage({ params }: { params: Promise<{ i
     // If not the customer, verify they are admin
     const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single();
     if (!profile || profile.role !== 'admin') {
-      redirect("/marketplace");
+      redirect("/dashboard");
     }
   }
 

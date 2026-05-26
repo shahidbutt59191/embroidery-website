@@ -12,23 +12,14 @@ export default function Navbar() {
             </div>
             <span className="font-bold text-2xl tracking-tight text-primary">StitchMarket</span>
           </Link>
-          
-          <div className="hidden md:flex relative max-w-md w-[400px]">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <input 
-              type="text" 
-              placeholder="What service are you looking for today?" 
-              className="w-full h-10 pl-10 pr-4 rounded-full border border-border bg-accent focus:outline-none focus:ring-2 focus:ring-secondary focus:border-transparent transition-all"
-            />
-          </div>
         </div>
 
         <nav className="hidden md:flex items-center gap-6">
-          <Link href="/marketplace" className="text-sm font-medium hover:text-secondary transition-colors">
-            Marketplace
+          <Link href="/#services" className="text-sm font-medium hover:text-secondary transition-colors">
+            Our Services
           </Link>
-          <Link href="/seller" className="text-sm font-medium hover:text-secondary transition-colors">
-            Become a Seller
+          <Link href="/dashboard" className="text-sm font-medium hover:text-secondary transition-colors">
+            Dashboard
           </Link>
           <Link href="/login" className="text-sm font-medium hover:text-secondary transition-colors">
             Sign In
