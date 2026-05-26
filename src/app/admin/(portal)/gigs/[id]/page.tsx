@@ -8,7 +8,6 @@ export default async function GigDetailsPage({ params }: { params: Promise<{ id:
   const gigId = resolvedParams.id;
   const supabase = await createClient();
 
-  // Fetch the gig
   const { data: gig, error: gigError } = await supabase
     .from("gigs")
     .select("*")
@@ -19,21 +18,16 @@ export default async function GigDetailsPage({ params }: { params: Promise<{ id:
     return <div className="text-red-600 p-8">Gig not found or error loading gig.</div>;
   }
 
-  // Fetch properties and their options
-  const { data: properties, error: propsError } = await supabase
+  const { data: properties } = await supabase
     .from("gig_properties")
-    .select(`
-      *,
-      gig_property_options (*)
-    `)
+    .select(`*, gig_property_options (*)`)
     .eq("gig_id", gigId)
     .order("sort_order", { ascending: true });
 
   return (
     <div className="space-y-6 max-w-5xl mx-auto">
-      {/* Header */}
       <div className="flex items-center gap-4">
-        <Link href="/admin/gigs" className="p-2 hover:bg-accent rounded-full transition-colors">
+        <Link href="/admin/gigs" className="p-2 hover:bg-white rounded-full transition-colors">
           <ArrowLeft className="w-6 h-6 text-muted-foreground" />
         </Link>
         <div>
@@ -43,12 +37,10 @@ export default async function GigDetailsPage({ params }: { params: Promise<{ id:
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Left Column: Gig Details Summary */}
         <div className="lg:col-span-1 space-y-6">
           <div className="bg-white p-6 rounded-2xl shadow-sm border border-border">
             <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
-              <Settings className="w-5 h-5 text-secondary" />
-              Gig Details
+              <Settings className="w-5 h-5 text-secondary" /> Gig Details
             </h2>
             {gig.image_url && (
               <img src={gig.image_url} alt={gig.title} className="w-full h-32 object-cover rounded-xl mb-4" />
@@ -66,17 +58,12 @@ export default async function GigDetailsPage({ params }: { params: Promise<{ id:
           </div>
         </div>
 
-        {/* Right Column: Properties Management */}
         <div className="lg:col-span-2">
           <div className="bg-white p-6 rounded-2xl shadow-sm border border-border">
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-xl font-semibold font-outfit text-primary">Custom Properties</h2>
             </div>
-            
-            <PropertyManager 
-              gigId={gig.id} 
-              initialProperties={properties || []} 
-            />
+            <PropertyManager gigId={gig.id} initialProperties={properties || []} />
           </div>
         </div>
       </div>

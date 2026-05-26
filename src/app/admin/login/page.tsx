@@ -26,16 +26,28 @@ export default function AdminLoginPage() {
       return;
     }
 
-    // Verify admin role
-    const { data: profile } = await supabase
+    // Look up profile by auth user ID
+    const { data: profile, error: profileError } = await supabase
       .from("profiles")
-      .select("role")
+      .select("role, email")
       .eq("id", data.user.id)
       .single();
 
-    if (!profile || profile.role !== "admin") {
+    if (profileError || !profile) {
+      // Profile doesn't exist — show helpful message
       await supabase.auth.signOut();
-      setErrorMsg("Access denied. This portal is for administrators only.");
+      setErrorMsg(
+        `No profile found for this account. Please run this SQL in Supabase:\n\nINSERT INTO public.profiles (id, email, role) VALUES ('${data.user.id}', '${data.user.email}', 'admin') ON CONFLICT (id) DO UPDATE SET role = 'admin';`
+      );
+      setLoading(false);
+      return;
+    }
+
+    if (profile.role !== "admin") {
+      await supabase.auth.signOut();
+      setErrorMsg(
+        `Your account role is "${profile.role}", not "admin". Run this SQL in Supabase:\n\nUPDATE public.profiles SET role = 'admin' WHERE id = '${data.user.id}';`
+      );
       setLoading(false);
       return;
     }
@@ -69,7 +81,7 @@ export default function AdminLoginPage() {
             {errorMsg && (
               <div className="flex items-start gap-3 bg-red-500/10 border border-red-500/20 text-red-400 text-sm p-4 rounded-xl">
                 <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
-                <span>{errorMsg}</span>
+                <span className="whitespace-pre-wrap font-mono text-xs leading-relaxed">{errorMsg}</span>
               </div>
             )}
 
