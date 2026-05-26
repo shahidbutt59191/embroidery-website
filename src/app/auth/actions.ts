@@ -9,16 +9,20 @@ export async function login(formData: FormData) {
     const email = formData.get("email") as string;
     const password = formData.get("password") as string;
 
-    const { error } = await supabase.auth.signInWithPassword({
+    // TypeScript ke error se bachne ke liye response ko alag variable mein liya
+    const response = await supabase.auth.signInWithPassword({
         email,
         password,
     });
 
+    const error = response.error;
+
     if (error) {
-        // Yahan aap error message return kar sakte hain ya redirect kar sakte hain
+        // Agar login mein koi galti ho (jaise galat password)
         throw new Error(error.message);
     }
 
+    // Agar login sahi ho jaye to user ko marketplace par bhej dein
     revalidatePath("/", "layout");
-    redirect("/marketplace"); // Login ke baad user ko yahan bhej dein
+    redirect("/marketplace");
 }
