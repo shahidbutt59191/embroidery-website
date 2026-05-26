@@ -1,5 +1,6 @@
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
+import FloatingChat from "@/components/chat/FloatingChat";
 
 export default function CustomerLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -7,6 +8,7 @@ export default function CustomerLayout({ children }: { children: React.ReactNode
       <Navbar />
       <main className="flex-1 flex flex-col">{children}</main>
       <Footer />
+      <FloatingChat />
     </div>
   );
 }

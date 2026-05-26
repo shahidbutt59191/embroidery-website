@@ -1,54 +1,72 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
-import { MessageSquare, Package } from "lucide-react";
+import { MessageSquare, Package, Headphones } from "lucide-react";
 import AdminChatClient from "./AdminChatClient";
 
 export default async function AdminChatPage({
   searchParams,
 }: {
-  searchParams: Promise<{ order?: string }>;
+  searchParams: Promise<{ order?: string; support?: string }>;
 }) {
   const resolvedParams = await searchParams;
   const selectedOrderId = resolvedParams.order ?? null;
+  const selectedSupportId = resolvedParams.support ?? null; // customer_id for support chat
 
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) redirect("/login");
+  if (!user) redirect("/admin/login");
 
-  // Fetch all orders with customer info and last message
+  // Fetch all orders with customer info
   const { data: orders } = await supabase
     .from("orders")
-    .select(`
-      id, status, total_price, created_at,
-      gigs (title),
-      profiles!orders_customer_id_fkey (full_name, email)
-    `)
+    .select(`id, status, total_price, created_at, gigs (title), profiles!orders_customer_id_fkey (full_name, email)`)
     .not("status", "eq", "cancelled")
     .order("created_at", { ascending: false });
 
-  // Fetch unread message counts per order
+  // Fetch support chats (null order_id messages grouped by customer)
+  const { data: supportMessages } = await supabase
+    .from("chat_messages")
+    .select("customer_id, created_at, profiles!chat_messages_sender_id_fkey(full_name, email)")
+    .is("order_id", null)
+    .order("created_at", { ascending: false });
+
+  // Deduplicate support customers
+  const supportCustomers: Record<string, { customerId: string; name: string; lastAt: string }> = {};
+  supportMessages?.forEach((m: any) => {
+    if (m.customer_id && !supportCustomers[m.customer_id]) {
+      supportCustomers[m.customer_id] = {
+        customerId: m.customer_id,
+        name: m.profiles?.full_name || m.profiles?.email || "Customer",
+        lastAt: m.created_at,
+      };
+    }
+  });
+  const supportList = Object.values(supportCustomers);
+
+  // Unread counts for orders
   const { data: unreadCounts } = await supabase
     .from("chat_messages")
-    .select("order_id")
+    .select("order_id, customer_id")
     .eq("is_read", false)
     .neq("sender_id", user.id);
 
-  const unreadMap: Record<string, number> = {};
-  unreadCounts?.forEach((m) => {
-    unreadMap[m.order_id] = (unreadMap[m.order_id] || 0) + 1;
+  const unreadOrderMap: Record<string, number> = {};
+  const unreadSupportMap: Record<string, number> = {};
+  unreadCounts?.forEach((m: any) => {
+    if (m.order_id) unreadOrderMap[m.order_id] = (unreadOrderMap[m.order_id] || 0) + 1;
+    else if (m.customer_id) unreadSupportMap[m.customer_id] = (unreadSupportMap[m.customer_id] || 0) + 1;
   });
 
   const enrichedOrders = (orders || []).map((o: any) => ({
     id: o.id,
     status: o.status,
-    total_price: o.total_price,
-    created_at: o.created_at,
     gig_title: o.gigs?.title ?? "Unknown Gig",
     customer_name: o.profiles?.full_name || o.profiles?.email || "Customer",
-    unread: unreadMap[o.id] ?? 0,
+    unread: unreadOrderMap[o.id] ?? 0,
   }));
 
   const selectedOrder = enrichedOrders.find((o) => o.id === selectedOrderId) ?? null;
+  const selectedSupport = supportList.find((s) => s.customerId === selectedSupportId) ?? null;
 
   return (
     <div className="h-[calc(100vh-6rem)] flex flex-col">
@@ -58,11 +76,47 @@ export default async function AdminChatPage({
       </div>
 
       <div className="flex-1 flex gap-6 min-h-0">
-        {/* Sidebar: Order List */}
+        {/* Sidebar */}
         <div className="w-80 flex-shrink-0 bg-white rounded-2xl border border-border shadow-sm flex flex-col overflow-hidden">
-          <div className="px-4 py-3 border-b border-border bg-accent/20">
-            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-              {enrichedOrders.length} Active Conversations
+
+          {/* Support Section */}
+          {supportList.length > 0 && (
+            <>
+              <div className="px-4 py-2.5 border-b border-border bg-secondary/5">
+                <p className="text-[10px] font-bold text-secondary uppercase tracking-widest flex items-center gap-1.5">
+                  <Headphones className="w-3 h-3" /> General Support ({supportList.length})
+                </p>
+              </div>
+              <div className="divide-y divide-border border-b border-border">
+                {supportList.map((s) => (
+                  <a
+                    key={s.customerId}
+                    href={`/admin/chat?support=${s.customerId}`}
+                    className={`block px-4 py-3 hover:bg-secondary/5 transition-colors ${
+                      s.customerId === selectedSupportId ? "bg-secondary/10 border-l-2 border-secondary" : ""
+                    }`}
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="min-w-0">
+                        <p className="font-semibold text-foreground text-sm truncate">{s.name}</p>
+                        <p className="text-[10px] text-secondary font-medium mt-0.5">Support Chat</p>
+                      </div>
+                      {unreadSupportMap[s.customerId] > 0 && (
+                        <span className="flex-shrink-0 min-w-[20px] h-5 bg-secondary text-white text-[10px] font-bold rounded-full flex items-center justify-center px-1.5">
+                          {unreadSupportMap[s.customerId]}
+                        </span>
+                      )}
+                    </div>
+                  </a>
+                ))}
+              </div>
+            </>
+          )}
+
+          {/* Orders Section */}
+          <div className="px-4 py-2.5 border-b border-border bg-accent/20">
+            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest flex items-center gap-1.5">
+              <Package className="w-3 h-3" /> Order Chats ({enrichedOrders.length})
             </p>
           </div>
           <div className="flex-1 overflow-y-auto divide-y divide-border">
@@ -76,7 +130,7 @@ export default async function AdminChatPage({
                 <a
                   key={order.id}
                   href={`/admin/chat?order=${order.id}`}
-                  className={`block px-4 py-3.5 hover:bg-accent/30 transition-colors cursor-pointer ${
+                  className={`block px-4 py-3.5 hover:bg-accent/30 transition-colors ${
                     order.id === selectedOrderId ? "bg-primary/5 border-l-2 border-primary" : ""
                   }`}
                 >
@@ -89,7 +143,7 @@ export default async function AdminChatPage({
                       </p>
                     </div>
                     {order.unread > 0 && (
-                      <span className="flex-shrink-0 min-w-[20px] h-5 bg-secondary text-white text-[10px] font-bold rounded-full flex items-center justify-center px-1.5">
+                      <span className="flex-shrink-0 min-w-[20px] h-5 bg-primary text-white text-[10px] font-bold rounded-full flex items-center justify-center px-1.5">
                         {order.unread}
                       </span>
                     )}
@@ -108,6 +162,13 @@ export default async function AdminChatPage({
               adminId={user.id}
               customerName={selectedOrder.customer_name}
             />
+          ) : selectedSupport ? (
+            <AdminChatClient
+              orderId={null}
+              adminId={user.id}
+              customerName={selectedSupport.name}
+              customerId={selectedSupport.customerId}
+            />
           ) : (
             <div className="flex-1 flex flex-col items-center justify-center text-muted-foreground gap-4">
               <div className="w-20 h-20 bg-primary/5 rounded-full flex items-center justify-center">
@@ -115,7 +176,7 @@ export default async function AdminChatPage({
               </div>
               <div className="text-center">
                 <p className="font-semibold text-foreground text-lg">Select a conversation</p>
-                <p className="text-sm mt-1">Choose an order from the left to start chatting.</p>
+                <p className="text-sm mt-1">Choose an order or support chat from the left.</p>
               </div>
             </div>
           )}

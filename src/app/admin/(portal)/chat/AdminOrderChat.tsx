@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { Send, Loader2, Circle } from "lucide-react";
+import { Send, Loader2, Circle, Headphones } from "lucide-react";
 
 interface Message {
   id: string;
@@ -13,7 +13,17 @@ interface Message {
   profiles?: { full_name: string; role: string } | null;
 }
 
-export default function AdminOrderChat({ orderId, adminId, customerName }: { orderId: string; adminId: string; customerName: string }) {
+export default function AdminOrderChat({
+  orderId,
+  adminId,
+  customerName,
+  customerId,
+}: {
+  orderId: string | null;
+  adminId: string;
+  customerName: string;
+  customerId?: string;
+}) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState("");
   const [loading, setLoading] = useState(true);
@@ -23,6 +33,9 @@ export default function AdminOrderChat({ orderId, adminId, customerName }: { ord
   const inputRef = useRef<HTMLInputElement>(null);
   const supabase = createClient();
 
+  const isSupport = orderId === null;
+  const channelKey = isSupport ? `support_${customerId}` : `admin_chat_${orderId}`;
+
   const scrollToBottom = useCallback(() => {
     setTimeout(() => {
       if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
@@ -30,17 +43,22 @@ export default function AdminOrderChat({ orderId, adminId, customerName }: { ord
   }, []);
 
   useEffect(() => {
-    if (!orderId) return;
     setLoading(true);
     setMessages([]);
 
     const fetchMessages = async () => {
-      const { data } = await supabase
+      let query = supabase
         .from("chat_messages")
         .select("*, profiles(full_name, role)")
-        .eq("order_id", orderId)
         .order("created_at", { ascending: true });
 
+      if (isSupport && customerId) {
+        query = query.is("order_id", null).eq("customer_id", customerId);
+      } else if (orderId) {
+        query = query.eq("order_id", orderId);
+      }
+
+      const { data } = await query;
       if (data) setMessages(data as Message[]);
       setLoading(false);
       scrollToBottom();
@@ -48,13 +66,18 @@ export default function AdminOrderChat({ orderId, adminId, customerName }: { ord
 
     fetchMessages();
 
+    // Real-time
+    const filterStr = isSupport && customerId
+      ? `customer_id=eq.${customerId}`
+      : `order_id=eq.${orderId}`;
+
     const channel = supabase
-      .channel(`admin_chat_${orderId}`)
+      .channel(channelKey)
       .on("postgres_changes", {
         event: "INSERT",
         schema: "public",
         table: "chat_messages",
-        filter: `order_id=eq.${orderId}`,
+        filter: filterStr,
       }, async (payload) => {
         const { data: profile } = await supabase
           .from("profiles")
@@ -72,53 +95,49 @@ export default function AdminOrderChat({ orderId, adminId, customerName }: { ord
       .subscribe((status) => setIsOnline(status === "SUBSCRIBED"));
 
     return () => { supabase.removeChannel(channel); };
-  }, [orderId]);
+  }, [orderId, customerId]);
 
   const handleSend = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newMessage.trim() || !orderId) return;
-
-    setSending(true);
     const text = newMessage.trim();
+    if (!text) return;
+    setSending(true);
     setNewMessage("");
 
-    const { error } = await supabase.from("chat_messages").insert([{
-      order_id: orderId,
+    const payload: any = {
       sender_id: adminId,
       message_text: text,
-    }]);
+    };
 
+    if (isSupport && customerId) {
+      payload.order_id = null;
+      payload.customer_id = customerId;
+    } else {
+      payload.order_id = orderId;
+      payload.customer_id = null;
+    }
+
+    const { error } = await supabase.from("chat_messages").insert([payload]);
     if (error) setNewMessage(text);
     setSending(false);
     inputRef.current?.focus();
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      handleSend(e as any);
-    }
-  };
-
   const formatTime = (ts: string) =>
     new Date(ts).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 
-  if (!orderId) {
-    return (
-      <div className="flex-1 flex flex-col items-center justify-center text-muted-foreground gap-3">
-        <Send className="w-12 h-12 opacity-20" />
-        <p className="font-medium">Select an order to start chatting</p>
-      </div>
-    );
-  }
-
   return (
     <div className="flex flex-col h-full">
-      {/* Chat Header */}
+      {/* Header */}
       <div className="px-5 py-4 border-b border-border bg-gradient-to-r from-primary/5 to-secondary/5 flex items-center justify-between flex-shrink-0">
         <div>
-          <p className="font-bold text-foreground">{customerName}</p>
-          <p className="text-xs text-muted-foreground">Order #{orderId.split("-")[0]}</p>
+          <p className="font-bold text-foreground flex items-center gap-2">
+            {isSupport && <Headphones className="w-4 h-4 text-secondary" />}
+            {customerName}
+          </p>
+          <p className="text-xs text-muted-foreground">
+            {isSupport ? "General Support Chat" : `Order #${orderId?.split("-")[0]}`}
+          </p>
         </div>
         <div className="flex items-center gap-1.5 text-xs">
           <Circle className={`w-2 h-2 fill-current ${isOnline ? "text-green-500" : "text-gray-300"}`} />
@@ -142,12 +161,11 @@ export default function AdminOrderChat({ orderId, adminId, customerName }: { ord
         ) : (
           messages.map((msg) => {
             const isAdmin = msg.sender_id === adminId;
-            const isCustomer = !isAdmin;
             return (
               <div key={msg.id} className={`flex flex-col ${isAdmin ? "items-end" : "items-start"}`}>
-                {isCustomer && (
+                {!isAdmin && (
                   <span className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wider mb-1 ml-1">
-                    {msg.profiles?.full_name || "Customer"}
+                    {msg.profiles?.full_name || customerName}
                   </span>
                 )}
                 <div className={`px-4 py-2.5 rounded-2xl max-w-[82%] text-sm leading-relaxed shadow-sm ${
@@ -174,10 +192,11 @@ export default function AdminOrderChat({ orderId, adminId, customerName }: { ord
             type="text"
             value={newMessage}
             onChange={(e) => setNewMessage(e.target.value)}
-            onKeyDown={handleKeyDown}
+            onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSend(e as any); } }}
             placeholder={`Reply to ${customerName}...`}
             className="flex-1 px-4 py-2.5 rounded-full border border-border bg-white focus:outline-none focus:ring-2 focus:ring-primary/50 text-sm"
             disabled={sending}
+            autoFocus
           />
           <button
             type="submit"
