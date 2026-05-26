@@ -23,24 +23,29 @@ export default async function AdminLayout({
         <div className="p-6 border-b border-border">
           <h2 className="text-2xl font-bold font-outfit text-primary">Admin Panel</h2>
         </div>
-        <nav className="flex-1 p-4 space-y-2">
-          <Link href="/admin" className="flex items-center gap-3 px-4 py-3 rounded-lg text-foreground hover:bg-accent/50 hover:text-primary transition-colors">
+        <nav className="flex-1 p-4 space-y-1">
+          <Link href="/admin" className="flex items-center gap-3 px-4 py-3 rounded-xl text-foreground hover:bg-accent/50 hover:text-primary transition-colors font-medium">
             <LayoutDashboard className="w-5 h-5" />
-            <span className="font-medium">Dashboard</span>
+            <span>Dashboard</span>
           </Link>
-          <Link href="/admin/gigs" className="flex items-center gap-3 px-4 py-3 rounded-lg text-foreground hover:bg-accent/50 hover:text-primary transition-colors">
+          <Link href="/admin/gigs" className="flex items-center gap-3 px-4 py-3 rounded-xl text-foreground hover:bg-accent/50 hover:text-primary transition-colors font-medium">
             <Scissors className="w-5 h-5" />
-            <span className="font-medium">Manage Gigs</span>
+            <span>Manage Gigs</span>
           </Link>
-          <Link href="/admin/orders" className="flex items-center gap-3 px-4 py-3 rounded-lg text-foreground hover:bg-accent/50 hover:text-primary transition-colors">
+          <Link href="/admin/orders" className="flex items-center gap-3 px-4 py-3 rounded-xl text-foreground hover:bg-accent/50 hover:text-primary transition-colors font-medium">
             <ListOrdered className="w-5 h-5" />
-            <span className="font-medium">Orders</span>
+            <span>Orders</span>
           </Link>
-          <Link href="/admin/chat" className="flex items-center gap-3 px-4 py-3 rounded-lg text-foreground hover:bg-accent/50 hover:text-primary transition-colors">
+          <Link href="/admin/chat" className="flex items-center gap-3 px-4 py-3 rounded-xl text-foreground hover:bg-accent/50 hover:text-secondary transition-colors font-medium">
             <MessageSquare className="w-5 h-5" />
-            <span className="font-medium">Chat</span>
+            <span>Customer Chat</span>
           </Link>
         </nav>
+        <div className="p-4 border-t border-border">
+          <Link href="/" className="flex items-center gap-3 px-4 py-2.5 rounded-xl text-muted-foreground hover:text-foreground transition-colors text-sm">
+            ← Back to Website
+          </Link>
+        </div>
       </aside>
 
       {/* Main Content */}

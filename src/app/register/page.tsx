@@ -32,7 +32,7 @@ export default function RegisterPage() {
     if (error) {
       alert(error.message);
     } else {
-      alert("Account kamyabi se ban gaya! Kripya apni email check karein.");
+      alert("Account created successfully! Please check your email to confirm.");
       router.push("/login");
     }
     setLoading(false);
