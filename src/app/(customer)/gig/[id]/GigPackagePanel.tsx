@@ -223,9 +223,9 @@ export default function GigPackagePanel({
           </button>
         )}
 
-        {/* Contact button */}
+        {/* Contact button — opens floating chat */}
         <button
-          onClick={() => router.push("/register")}
+          onClick={() => window.dispatchEvent(new CustomEvent("open-support-chat"))}
           className="w-full mt-3 border border-gray-300 text-gray-700 hover:bg-gray-50 py-3 rounded-md font-semibold text-sm flex items-center justify-center gap-2 transition-colors"
         >
           <MessageSquare className="w-4 h-4" /> Contact me

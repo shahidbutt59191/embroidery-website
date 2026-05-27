@@ -53,7 +53,15 @@ export default function FloatingChat() {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, session) => {
       setUser(session?.user ?? null);
     });
-    return () => subscription.unsubscribe();
+
+    // Listen for "Contact me" button on gig page
+    const openHandler = () => setIsOpen(true);
+    window.addEventListener("open-support-chat", openHandler);
+
+    return () => {
+      subscription.unsubscribe();
+      window.removeEventListener("open-support-chat", openHandler);
+    };
   }, []);
 
   // Fetch + subscribe to support messages

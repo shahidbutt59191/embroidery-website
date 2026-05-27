@@ -1,20 +1,34 @@
 import { createClient } from "@/lib/supabase/server";
 import Link from "next/link";
-import { ArrowLeft, Star, Clock, RefreshCw, ShieldCheck, ChevronLeft, ChevronRight } from "lucide-react";
+import { ArrowLeft, Star, Clock, RefreshCw, ShieldCheck } from "lucide-react";
 import GigPackagePanel from "./GigPackagePanel";
 import GigGallery from "./GigGallery";
+
+// ── render markdown-like inline formatting ───────────────────
+function renderInline(text: string): React.ReactNode[] {
+  // Split on **bold**, *italic*, ==highlight==
+  const parts: React.ReactNode[] = [];
+  const regex = /(\*\*(.+?)\*\*)|(\*(.+?)\*)|==(.+?)==/g;
+  let last = 0;
+  let match: RegExpExecArray | null;
+  while ((match = regex.exec(text)) !== null) {
+    if (match.index > last) parts.push(text.slice(last, match.index));
+    if (match[1]) parts.push(<strong key={match.index} className="font-semibold text-gray-900">{match[2]}</strong>);
+    else if (match[3]) parts.push(<em key={match.index} className="italic">{match[4]}</em>);
+    else if (match[5]) parts.push(<mark key={match.index} className="bg-yellow-200 px-0.5 rounded not-italic">{match[5]}</mark>);
+    last = match.index + match[0].length;
+  }
+  if (last < text.length) parts.push(text.slice(last));
+  return parts;
+}
 
 export default async function CustomerGigPage({ params }: { params: Promise<{ id: string }> }) {
   const { id: gigId } = await params;
   const supabase = await createClient();
-
   const { data: { user } } = await supabase.auth.getUser();
 
   const { data: gig, error: gigError } = await supabase
-    .from("gigs")
-    .select("*")
-    .eq("id", gigId)
-    .single();
+    .from("gigs").select("*").eq("id", gigId).single();
 
   if (gigError || !gig || !gig.is_active) {
     return (
@@ -27,18 +41,28 @@ export default async function CustomerGigPage({ params }: { params: Promise<{ id
     );
   }
 
+  // Load extra images from gig_images table
+  let extraImages: string[] = [];
+  try {
+    const { data } = await supabase
+      .from("gig_images").select("image_url").eq("gig_id", gigId).order("sort_order", { ascending: true });
+    extraImages = (data || []).map((r: any) => r.image_url);
+  } catch (_) {}
+
+  const allImages = [
+    ...(gig.image_url ? [gig.image_url] : []),
+    ...extraImages,
+  ];
+
   const { data: properties } = await supabase
-    .from("gig_properties")
-    .select("*, gig_property_options (*)")
-    .eq("gig_id", gigId)
+    .from("gig_properties").select("*, gig_property_options (*)").eq("gig_id", gigId)
     .order("sort_order", { ascending: true });
 
-  // Parse description into paragraphs for proper rendering
   const descriptionLines = (gig.description || "").split("\n").filter(Boolean);
 
   return (
     <div className="bg-white min-h-screen">
-      {/* Top breadcrumb bar */}
+      {/* Breadcrumb */}
       <div className="border-b border-gray-200 bg-white sticky top-0 z-10">
         <div className="max-w-6xl mx-auto px-4 py-3">
           <Link href="/#services" className="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-800 transition-colors">
@@ -50,7 +74,7 @@ export default async function CustomerGigPage({ params }: { params: Promise<{ id
       <div className="max-w-6xl mx-auto px-4 py-8">
         <div className="flex flex-col lg:flex-row gap-8">
 
-          {/* ── LEFT COLUMN ── */}
+          {/* ── LEFT COLUMN ─────────────────────────────── */}
           <div className="flex-1 min-w-0">
 
             {/* Title */}
@@ -78,48 +102,45 @@ export default async function CustomerGigPage({ params }: { params: Promise<{ id
               </div>
             </div>
 
-            {/* Image Gallery */}
-            <GigGallery imageUrl={gig.image_url} title={gig.title} />
+            {/* Image Gallery — passes all images */}
+            <GigGallery images={allImages} title={gig.title} />
 
-            {/* About this gig */}
+            {/* About This Gig */}
             <div className="mt-8 border-t border-gray-100 pt-8">
               <h2 className="text-lg font-semibold text-gray-900 mb-4">About This Gig</h2>
-              <div className="text-sm text-gray-700 leading-relaxed space-y-3">
+              <div className="text-sm text-gray-700 leading-relaxed space-y-2.5">
                 {descriptionLines.map((line: string, i: number) => {
-                  // Detect bullet lines starting with -, *, •
-                  const isBullet = /^[-*•]/.test(line.trim());
-                  // Detect numbered lines like "1." "2."
-                  const isNumbered = /^\d+\./.test(line.trim());
+                  const isBullet = /^[-*•]\s/.test(line);
+                  const isNumbered = /^\d+\.\s/.test(line);
 
                   if (isBullet) {
+                    const content = line.replace(/^[-*•]\s/, "");
                     return (
                       <div key={i} className="flex items-start gap-2">
                         <span className="text-primary font-bold mt-0.5 flex-shrink-0">✓</span>
-                        <span>{line.replace(/^[-*•]\s*/, "")}</span>
+                        <span>{renderInline(content)}</span>
                       </div>
                     );
                   }
                   if (isNumbered) {
+                    const num = line.match(/^\d+/)?.[0];
+                    const content = line.replace(/^\d+\.\s*/, "");
                     return (
                       <div key={i} className="flex items-start gap-2">
-                        <span className="text-primary font-semibold flex-shrink-0 min-w-[20px]">
-                          {line.match(/^\d+/)?.[0]}.
-                        </span>
-                        <span>{line.replace(/^\d+\.\s*/, "")}</span>
+                        <span className="text-primary font-semibold flex-shrink-0 min-w-[20px]">{num}.</span>
+                        <span>{renderInline(content)}</span>
                       </div>
                     );
                   }
-                  return <p key={i}>{line}</p>;
+                  return <p key={i}>{renderInline(line)}</p>;
                 })}
-
-                {/* If description is empty, show placeholder */}
                 {descriptionLines.length === 0 && (
-                  <p className="text-gray-500 italic">Description coming soon.</p>
+                  <p className="text-gray-400 italic">Description coming soon.</p>
                 )}
               </div>
             </div>
 
-            {/* What's included */}
+            {/* What's Included */}
             <div className="mt-8 border-t border-gray-100 pt-8">
               <h2 className="text-lg font-semibold text-gray-900 mb-4">What&apos;s Included</h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -139,7 +160,7 @@ export default async function CustomerGigPage({ params }: { params: Promise<{ id
 
           </div>
 
-          {/* ── RIGHT COLUMN — Sticky Package Panel ── */}
+          {/* ── RIGHT COLUMN — Sticky Package Panel ─────── */}
           <div className="w-full lg:w-[340px] flex-shrink-0">
             <div className="sticky top-16">
               <GigPackagePanel
