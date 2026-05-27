@@ -179,12 +179,12 @@ function FeaturedGig({ gig, otherCount }: { gig: any; otherCount: number }) {
 
           {/* Action Buttons */}
           <div className="space-y-3">
-            <Link
-              href={`/gig/${gig.id}`}
+            <button
+              onClick={() => document.getElementById('pricing-packages')?.scrollIntoView({ behavior: 'smooth' })}
               className="w-full flex items-center justify-center gap-2 bg-primary text-white py-3 rounded-xl font-bold text-sm hover:bg-primary/90 transition-all shadow-sm active:scale-[0.98]"
             >
               Order This Service <ArrowRight className="w-4 h-4" />
-            </Link>
+            </button>
             <Link
               href="/inbox"
               className="w-full flex items-center justify-center gap-2 bg-white text-foreground border-2 border-border py-2.5 rounded-xl font-semibold text-sm hover:border-primary/40 hover:bg-slate-50 transition-all active:scale-[0.98]"
@@ -196,7 +196,7 @@ function FeaturedGig({ gig, otherCount }: { gig: any; otherCount: number }) {
       </div>
 
       {/* ── Package Cards ── */}
-      <div>
+      <div id="pricing-packages" className="scroll-mt-24">
         <div className="text-center mb-8">
           <div className="inline-flex items-center gap-2 bg-primary/10 text-primary px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest mb-3">
             ✦ Pricing Packages
