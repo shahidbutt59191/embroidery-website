@@ -138,74 +138,83 @@ export default function GigPackagePanel({ gig, properties, userId }: {
   return (
     <div className="space-y-4">
 
-      {/* ── Package Cards — Hostinger-style full pricing cards */}
+      {/* ── Full-width Package Cards ─────────────────────── */}
       <div>
-        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-widest mb-4">Select a Package</p>
-
-        <div className="grid grid-cols-3 gap-3">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
           {packages.map((p, i) => {
             const isSelected = selected === i;
+            const accentColors: Record<string, { ring: string; btn: string; badge: string; check: string }> = {
+              basic:    { ring: "border-primary shadow-primary/15",    btn: "bg-primary",    badge: "bg-slate-700",   check: "text-primary" },
+              standard: { ring: "border-secondary shadow-secondary/15", btn: "bg-secondary",  badge: "bg-secondary",   check: "text-secondary" },
+              premium:  { ring: "border-amber-500 shadow-amber-500/15", btn: "bg-amber-500",  badge: "bg-amber-500",   check: "text-amber-600" },
+            };
+            const ac = accentColors[p.id] || accentColors.basic;
+
             return (
               <div
                 key={p.id}
-                className={`relative flex flex-col rounded-2xl border-2 overflow-hidden transition-all duration-200 ${
-                  isSelected
-                    ? "border-primary shadow-lg shadow-primary/10"
-                    : "border-border bg-white hover:border-primary/40 hover:shadow-md"
+                className={`relative flex flex-col rounded-2xl border-2 overflow-hidden bg-white transition-all duration-200 ${
+                  isSelected ? `${ac.ring} shadow-xl` : "border-border hover:border-slate-300 hover:shadow-md"
                 }`}
               >
-                {/* Badge */}
+                {/* Badge bar */}
                 {p.badge ? (
-                  <div className="bg-secondary text-white text-[9px] font-bold uppercase tracking-widest text-center py-1.5 px-2">
+                  <div className={`${ac.badge} text-white text-xs font-bold uppercase tracking-widest text-center py-2`}>
                     {p.badge}
                   </div>
-                ) : (
-                  <div className="h-[26px]" /> /* spacer to align cards */
-                )}
+                ) : <div className="h-[34px] bg-slate-50 border-b border-border" />}
 
-                {/* Card body */}
-                <div className="flex flex-col flex-1 p-3 text-center">
-                  {/* Package name */}
-                  <p className="text-xs font-semibold text-muted-foreground mt-1">{p.label}</p>
+                <div className="p-6 flex flex-col flex-1">
+                  {/* Emoji + Name */}
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-2xl ${
+                      isSelected ? `bg-white shadow-md ring-2 ring-offset-1 ${ac.ring}` : "bg-slate-50"
+                    }`}>{p.emoji}</div>
+                    <div>
+                      <p className="font-bold text-lg text-foreground">{p.label}</p>
+                      <p className="text-xs text-muted-foreground">{p.description}</p>
+                    </div>
+                  </div>
 
                   {/* Price */}
-                  <div className="mt-2 mb-1">
-                    <span className="text-2xl font-black text-foreground">
+                  <div className="mb-2">
+                    <span className="text-4xl font-black text-foreground">
                       ${typeof p.price === "number" ? p.price.toFixed(2) : p.price}
                     </span>
                   </div>
 
                   {/* Delivery */}
-                  <p className="text-[10px] text-muted-foreground mb-3 flex items-center justify-center gap-1">
-                    <Clock className="w-2.5 h-2.5" /> {p.delivery}
-                  </p>
+                  <div className="flex items-center gap-1.5 text-sm text-muted-foreground mb-5">
+                    <Clock className="w-4 h-4" />
+                    <span>{p.delivery} delivery</span>
+                  </div>
 
-                  {/* Select button */}
+                  {/* CTA Button */}
                   <button
                     type="button"
-                    onClick={() => { setSelected(i); setShowForm(false); }}
-                    className={`w-full py-2 rounded-xl text-xs font-bold transition-all mb-3 ${
+                    onClick={() => { setSelected(i); setShowForm(false); window.scrollBy({ top: 200, behavior: "smooth" }); }}
+                    className={`w-full py-3 rounded-xl text-sm font-bold transition-all mb-5 ${
                       isSelected
-                        ? "bg-primary text-white shadow-sm"
-                        : "bg-primary/10 text-primary hover:bg-primary hover:text-white"
+                        ? `${ac.btn} text-white shadow-md`
+                        : `bg-slate-100 text-foreground hover:${ac.btn} hover:text-white`
                     }`}
                   >
-                    {isSelected ? "✓ Selected" : "Select"}
+                    {isSelected ? "✓ Selected — Continue Below" : `Get ${p.label}`}
                   </button>
 
                   {/* Divider */}
-                  <div className="border-t border-border mb-3" />
+                  <div className="border-t border-border mb-5" />
 
                   {/* Features */}
-                  <ul className="space-y-1.5 text-left">
+                  <ul className="space-y-2.5 flex-1">
                     {p.features.map((f: string) => (
-                      <li key={f} className="flex items-start gap-1.5 text-[11px] text-foreground/80">
-                        <CheckCircle2 className="w-3 h-3 text-primary flex-shrink-0 mt-0.5" />
+                      <li key={f} className="flex items-start gap-2.5 text-sm text-foreground/80">
+                        <CheckCircle2 className={`w-4 h-4 flex-shrink-0 mt-0.5 ${isSelected ? ac.check : "text-slate-400"}`} />
                         <span>{f}</span>
                       </li>
                     ))}
-                    <li className="flex items-start gap-1.5 text-[11px] text-foreground/80">
-                      <Repeat2 className="w-3 h-3 text-primary flex-shrink-0 mt-0.5" />
+                    <li className="flex items-start gap-2.5 text-sm text-foreground/80">
+                      <Repeat2 className={`w-4 h-4 flex-shrink-0 mt-0.5 ${isSelected ? ac.check : "text-slate-400"}`} />
                       <span>{p.revisions} revisions</span>
                     </li>
                   </ul>
@@ -215,25 +224,38 @@ export default function GigPackagePanel({ gig, properties, userId }: {
           })}
         </div>
 
-        {/* Description of selected */}
-        <p className="text-xs text-muted-foreground mt-3 text-center italic">{packages[selected].description}</p>
+        {/* Ask question link */}
+        <div className="text-center mt-5">
+          <button
+            onClick={() => window.dispatchEvent(new CustomEvent("open-support-chat"))}
+            className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors font-medium"
+          >
+            <MessageSquare className="w-4 h-4" /> Not sure which package? Chat with us
+          </button>
+        </div>
       </div>
 
-      {/* ── CTA */}
+      {/* ── CTA: shown when package selected ───────────────── */}
       {!showForm ? (
-        <button
-          onClick={() => setShowForm(true)}
-          className="w-full bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary text-white py-3.5 rounded-2xl font-bold text-sm flex items-center justify-center gap-2 shadow-md hover:shadow-lg transition-all"
-        >
-          Continue with {pkg.label} — US${typeof pkg.price === "number" ? pkg.price.toFixed(2) : pkg.price} <ArrowRight className="w-4 h-4" />
-        </button>
+        <div className="mt-6 text-center">
+          <button
+            onClick={() => setShowForm(true)}
+            className="inline-flex items-center gap-3 bg-gradient-to-r from-primary to-primary/90 text-white px-10 py-4 rounded-2xl font-bold text-base shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all"
+          >
+            Continue with {pkg.label} — US${typeof pkg.price === "number" ? pkg.price.toFixed(2) : pkg.price}
+            <ArrowRight className="w-5 h-5" />
+          </button>
+          <p className="text-xs text-muted-foreground mt-2">No commitment — review your order before confirming</p>
+        </div>
       ) : (
-        <button
-          onClick={() => setShowForm(false)}
-          className="w-full bg-foreground text-white py-3 rounded-2xl font-bold text-sm"
-        >
-          ↑ Change Package
-        </button>
+        <div className="mt-6 flex justify-center">
+          <button
+            onClick={() => setShowForm(false)}
+            className="text-sm text-muted-foreground hover:text-primary transition-colors flex items-center gap-1.5"
+          >
+            ← Change package
+          </button>
+        </div>
       )}
 
       {/* Contact me */}

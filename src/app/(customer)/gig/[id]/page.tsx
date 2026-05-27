@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import Link from "next/link";
-import { ArrowLeft, BadgeCheck, Clock, Repeat2, Shield, Zap } from "lucide-react";
+import { ArrowLeft, BadgeCheck, Clock, Repeat2, Shield, Zap, Users, Award } from "lucide-react";
 import GigPackagePanel from "./GigPackagePanel";
 import GigGallery from "./GigGallery";
 
@@ -8,13 +8,11 @@ import GigGallery from "./GigGallery";
 function renderInline(text: string): React.ReactNode[] {
   const parts: React.ReactNode[] = [];
   const regex = /(\*\*(.+?)\*\*)|(\*(.+?)\*)|==(.+?)==/g;
-  let last = 0;
-  let m: RegExpExecArray | null;
-  let k = 0;
+  let last = 0; let m: RegExpExecArray | null; let k = 0;
   while ((m = regex.exec(text)) !== null) {
     if (m.index > last) parts.push(text.slice(last, m.index));
     if (m[1]) parts.push(<strong key={k++} className="font-bold text-foreground">{m[2]}</strong>);
-    else if (m[3]) parts.push(<em key={k++} className="italic">{m[4]}</em>);
+    else if (m[3]) parts.push(<em key={k++}>{m[4]}</em>);
     else if (m[5]) parts.push(<mark key={k++} className="bg-secondary/20 text-secondary px-1 rounded not-italic font-medium">{m[5]}</mark>);
     last = m.index + m[0].length;
   }
@@ -58,9 +56,9 @@ export default async function CustomerGigPage({ params }: { params: Promise<{ id
   const descLines = (gig.description || "").split("\n").filter(Boolean);
 
   return (
-    <div className="min-h-screen" style={{ background: "linear-gradient(135deg, #f8f6ff 0%, #fff 60%)" }}>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-primary/5">
 
-      {/* ── TOP HERO BAND */}
+      {/* ── Breadcrumb band */}
       <div className="bg-gradient-to-r from-primary via-primary/90 to-secondary/80 text-white">
         <div className="max-w-6xl mx-auto px-4 py-3 flex items-center gap-3">
           <Link href="/#services" className="flex items-center gap-1.5 text-white/70 hover:text-white transition-colors text-sm">
@@ -71,124 +69,155 @@ export default async function CustomerGigPage({ params }: { params: Promise<{ id
         </div>
       </div>
 
-      {/* ── MAIN CONTENT */}
-      <div className="max-w-6xl mx-auto px-4 py-8">
-        <div className="flex flex-col xl:flex-row gap-10">
+      <div className="max-w-6xl mx-auto px-4 py-8 space-y-10">
 
-          {/* ══ LEFT COLUMN ══════════════════════════════════ */}
-          <div className="flex-1 min-w-0 space-y-8">
+        {/* ══ SECTION 1: Hero — Gallery + Title side by side ══ */}
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 items-start">
 
-            {/* Title Card */}
+          {/* Gallery — takes more space */}
+          <div className="lg:col-span-3">
+            <GigGallery images={allImages} title={gig.title} />
+          </div>
+
+          {/* Title + badges + quick stats */}
+          <div className="lg:col-span-2 space-y-5">
             <div>
-              <h1 className="text-2xl sm:text-3xl font-bold text-foreground leading-tight mb-5">
+              <h1 className="text-2xl font-bold text-foreground leading-snug">
                 {gig.title}
               </h1>
 
-              {/* Company service badges — NOT a freelancer profile */}
-              <div className="flex flex-wrap items-center gap-2">
-                <span className="inline-flex items-center gap-1.5 bg-primary/10 text-primary text-xs font-semibold px-3 py-1.5 rounded-lg">
-                  <Shield className="w-3.5 h-3.5" /> Professional Service
-                </span>
-                <span className="inline-flex items-center gap-1.5 bg-secondary/10 text-secondary text-xs font-semibold px-3 py-1.5 rounded-lg">
-                  <Zap className="w-3.5 h-3.5" /> Fast Turnaround
-                </span>
-                <span className="inline-flex items-center gap-1.5 bg-green-50 text-green-700 text-xs font-semibold px-3 py-1.5 rounded-lg border border-green-100">
-                  <Repeat2 className="w-3.5 h-3.5" /> Unlimited Revisions
-                </span>
-                <span className="inline-flex items-center gap-1.5 bg-amber-50 text-amber-700 text-xs font-semibold px-3 py-1.5 rounded-lg border border-amber-100">
-                  <BadgeCheck className="w-3.5 h-3.5" /> Quality Guaranteed
-                </span>
-              </div>
-            </div>
-
-            {/* Gallery */}
-            <GigGallery images={allImages} title={gig.title} />
-
-            {/* Trust badges */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-              {[
-                { icon: Zap, label: "Fast Delivery", sub: "As quick as 1 day" },
-                { icon: Repeat2, label: "Free Revisions", sub: "Until you're happy" },
-                { icon: Shield, label: "All Formats", sub: ".DST .PES .JEF +" },
-                { icon: BadgeCheck, label: "Expert Quality", sub: "5★ rated service" },
-              ].map(({ icon: Icon, label, sub }) => (
-                <div key={label} className="bg-white rounded-xl p-3 border border-border shadow-sm text-center">
-                  <div className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center mx-auto mb-2">
-                    <Icon className="w-4 h-4 text-primary" />
-                  </div>
-                  <p className="text-xs font-semibold text-foreground">{label}</p>
-                  <p className="text-[10px] text-muted-foreground mt-0.5">{sub}</p>
-                </div>
-              ))}
-            </div>
-
-            {/* Description */}
-            <div className="bg-white rounded-2xl border border-border shadow-sm p-6">
-              <div className="flex items-center gap-2 mb-5">
-                <div className="w-1 h-6 bg-gradient-to-b from-primary to-secondary rounded-full"></div>
-                <h2 className="text-lg font-bold text-foreground">About This Service</h2>
-              </div>
-
-              <div className="text-sm text-muted-foreground leading-relaxed space-y-2.5">
-                {descLines.map((line: string, i: number) => {
-                  const isBullet = /^[-*•]\s/.test(line);
-                  const isNum = /^\d+\.\s/.test(line);
-
-                  if (isBullet) return (
-                    <div key={i} className="flex items-start gap-2.5">
-                      <span className="mt-0.5 w-5 h-5 bg-primary/10 rounded-full flex items-center justify-center flex-shrink-0">
-                        <span className="text-primary text-[10px] font-bold">✓</span>
-                      </span>
-                      <span className="text-foreground/80">{renderInline(line.replace(/^[-*•]\s/, ""))}</span>
-                    </div>
-                  );
-                  if (isNum) {
-                    const num = line.match(/^\d+/)?.[0];
-                    return (
-                      <div key={i} className="flex items-start gap-2.5">
-                        <span className="mt-0.5 w-5 h-5 bg-secondary/10 text-secondary rounded-full flex items-center justify-center flex-shrink-0 text-[10px] font-bold">
-                          {num}
-                        </span>
-                        <span className="text-foreground/80">{renderInline(line.replace(/^\d+\.\s*/, ""))}</span>
-                      </div>
-                    );
-                  }
-                  return <p key={i} className="text-foreground/80">{renderInline(line)}</p>;
-                })}
-                {descLines.length === 0 && <p className="text-muted-foreground italic">Description coming soon.</p>}
-              </div>
-            </div>
-
-            {/* FAQ */}
-            <div className="bg-white rounded-2xl border border-border shadow-sm p-6">
-              <div className="flex items-center gap-2 mb-5">
-                <div className="w-1 h-6 bg-gradient-to-b from-secondary to-primary rounded-full"></div>
-                <h2 className="text-lg font-bold text-foreground">Frequently Asked Questions</h2>
-              </div>
-              <div className="space-y-4">
+              {/* Service badge pills */}
+              <div className="flex flex-wrap gap-2 mt-4">
                 {[
-                  { q: "What file formats do you deliver?", a: "We deliver in all major embroidery machine formats: .DST, .PES, .JEF, .VIP, .EXP, .HUS, .SEW, and more. Just let us know your machine brand." },
-                  { q: "How long does digitizing take?", a: "Standard orders are completed within 24 hours. Complex designs may take up to 48 hours. Rush delivery is available." },
-                  { q: "What if I'm not satisfied?", a: "We offer unlimited free revisions until you are 100% satisfied. Your satisfaction is our guarantee." },
-                ].map(({ q, a }) => (
-                  <div key={q} className="border-b border-border last:border-0 pb-4 last:pb-0">
-                    <p className="font-semibold text-sm text-foreground mb-1">{q}</p>
-                    <p className="text-sm text-muted-foreground">{a}</p>
-                  </div>
+                  { icon: Shield, label: "Professional Service", color: "bg-primary/10 text-primary" },
+                  { icon: Zap, label: "Fast Turnaround", color: "bg-amber-50 text-amber-700 border border-amber-100" },
+                  { icon: Repeat2, label: "Unlimited Revisions", color: "bg-green-50 text-green-700 border border-green-100" },
+                  { icon: BadgeCheck, label: "Quality Guaranteed", color: "bg-secondary/10 text-secondary" },
+                ].map(({ icon: Icon, label, color }) => (
+                  <span key={label} className={`inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg ${color}`}>
+                    <Icon className="w-3.5 h-3.5" /> {label}
+                  </span>
                 ))}
               </div>
             </div>
 
+            {/* Quick stats row */}
+            <div className="grid grid-cols-3 gap-3">
+              {[
+                { icon: Award, value: "5★", label: "Quality" },
+                { icon: Users, value: "500+", label: "Clients" },
+                { icon: Clock, value: "24h", label: "Avg. Delivery" },
+              ].map(({ icon: Icon, value, label }) => (
+                <div key={label} className="bg-white rounded-xl border border-border p-3 text-center shadow-sm">
+                  <Icon className="w-4 h-4 text-primary mx-auto mb-1" />
+                  <p className="font-bold text-base text-foreground">{value}</p>
+                  <p className="text-[10px] text-muted-foreground">{label}</p>
+                </div>
+              ))}
+            </div>
+
+            {/* Short intro excerpt */}
+            {descLines.length > 0 && (
+              <div className="bg-white rounded-xl border border-border p-4 shadow-sm">
+                <p className="text-sm text-muted-foreground leading-relaxed line-clamp-4">
+                  {renderInline(descLines[0])}
+                </p>
+              </div>
+            )}
+
+            {/* Ask a question */}
+            <button
+              onClick={() => {}}
+              className="w-full border-2 border-border hover:border-primary text-muted-foreground hover:text-primary py-2.5 rounded-xl font-semibold text-sm flex items-center justify-center gap-2 transition-all"
+              id="ask-question-btn"
+            >
+              💬 Have a question? Chat with us
+            </button>
+            <script dangerouslySetInnerHTML={{ __html: `document.getElementById('ask-question-btn').onclick=function(){window.dispatchEvent(new CustomEvent('open-support-chat'))}` }} />
+          </div>
+        </div>
+
+        {/* ══ SECTION 2: Choose Your Package — Full Width ══ */}
+        <div>
+          {/* Section header */}
+          <div className="text-center mb-8">
+            <div className="inline-flex items-center gap-2 bg-primary/10 text-primary px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest mb-3">
+              ✦ Our Packages
+            </div>
+            <h2 className="text-2xl font-bold text-foreground">Choose the Right Package for You</h2>
+            <p className="text-muted-foreground text-sm mt-2">Select a plan that fits your project — all include unlimited revisions</p>
           </div>
 
-          {/* ══ RIGHT COLUMN — Sticky ════════════════════════ */}
-          <div className="w-full xl:w-[360px] flex-shrink-0">
-            <div className="sticky top-6">
-              <GigPackagePanel gig={gig} properties={properties || []} userId={user?.id || null} />
+          {/* Full-width package panel */}
+          <GigPackagePanel gig={gig} properties={properties || []} userId={user?.id || null} />
+        </div>
+
+        {/* ══ SECTION 3: About This Service ══ */}
+        <div className="bg-white rounded-2xl border border-border shadow-sm p-8">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center">
+              <Shield className="w-5 h-5 text-primary" />
+            </div>
+            <div>
+              <h2 className="text-xl font-bold text-foreground">About This Service</h2>
+              <p className="text-xs text-muted-foreground">What you get with every order</p>
             </div>
           </div>
 
+          <div className="text-sm text-muted-foreground leading-relaxed space-y-3 max-w-3xl">
+            {descLines.map((line: string, i: number) => {
+              const isBullet = /^[-*•]\s/.test(line);
+              const isNum = /^\d+\.\s/.test(line);
+
+              if (isBullet) return (
+                <div key={i} className="flex items-start gap-3">
+                  <span className="mt-0.5 w-5 h-5 bg-primary/10 rounded-full flex items-center justify-center flex-shrink-0">
+                    <span className="text-primary text-[10px] font-bold">✓</span>
+                  </span>
+                  <span className="text-foreground/80">{renderInline(line.replace(/^[-*•]\s/, ""))}</span>
+                </div>
+              );
+              if (isNum) {
+                const num = line.match(/^\d+/)?.[0];
+                return (
+                  <div key={i} className="flex items-start gap-3">
+                    <span className="mt-0.5 w-5 h-5 bg-secondary/10 text-secondary rounded-full flex items-center justify-center flex-shrink-0 text-[10px] font-bold">{num}</span>
+                    <span className="text-foreground/80">{renderInline(line.replace(/^\d+\.\s*/, ""))}</span>
+                  </div>
+                );
+              }
+              return <p key={i} className="text-foreground/80">{renderInline(line)}</p>;
+            })}
+            {descLines.length === 0 && <p className="italic">Description coming soon.</p>}
+          </div>
         </div>
+
+        {/* ══ SECTION 4: FAQ ══ */}
+        <div className="bg-white rounded-2xl border border-border shadow-sm p-8">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="w-10 h-10 bg-secondary/10 rounded-xl flex items-center justify-center">
+              <BadgeCheck className="w-5 h-5 text-secondary" />
+            </div>
+            <div>
+              <h2 className="text-xl font-bold text-foreground">Frequently Asked Questions</h2>
+              <p className="text-xs text-muted-foreground">Everything you need to know</p>
+            </div>
+          </div>
+          <div className="space-y-5 max-w-3xl">
+            {[
+              { q: "What file formats do you deliver?", a: "We deliver in all major embroidery formats: .DST, .PES, .JEF, .VIP, .EXP, .HUS, .SEW and more. Just let us know your machine brand and we'll provide the right format." },
+              { q: "How long does digitizing take?", a: "Standard orders are completed within 24 hours. Complex designs may take up to 48 hours. Rush delivery is available on request." },
+              { q: "What if I'm not happy with the result?", a: "We offer unlimited free revisions on every order until you are 100% satisfied — no questions asked." },
+              { q: "What image quality do you need?", a: "Best results come from high-resolution files (PNG, JPG, PDF, AI, EPS). We can work with most file types, but higher resolution = better output." },
+            ].map(({ q, a }) => (
+              <div key={q} className="border-b border-border last:border-0 pb-5 last:pb-0">
+                <p className="font-semibold text-sm text-foreground mb-1.5">{q}</p>
+                <p className="text-sm text-muted-foreground leading-relaxed">{a}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+
       </div>
     </div>
   );
