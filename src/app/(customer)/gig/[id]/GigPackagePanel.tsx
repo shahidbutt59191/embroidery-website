@@ -138,63 +138,67 @@ export default function GigPackagePanel({ gig, properties, userId }: {
   return (
     <div className="space-y-4">
 
-      {/* ── Package Cards (3 horizontal) */}
-      <div className="space-y-2">
+      {/* ── Package Cards — 3 vertical side-by-side */}
+      <div>
         <p className="text-xs font-semibold text-muted-foreground uppercase tracking-widest mb-3">Select a Package</p>
-        {packages.map((p, i) => (
-          <button
-            key={p.id}
-            type="button"
-            onClick={() => { setSelected(i); setShowForm(false); }}
-            className={`w-full text-left rounded-2xl border-2 p-4 transition-all duration-200 ${
-              selected === i ? p.activeColor : p.color + " bg-white"
-            }`}
-          >
-            <div className="flex items-start justify-between gap-3">
-              <div className="flex items-center gap-3">
-                <div className={`w-9 h-9 rounded-xl flex items-center justify-center text-lg flex-shrink-0 ${
-                  selected === i ? "bg-white shadow-sm" : "bg-accent/50"
-                }`}>
-                  {p.emoji}
-                </div>
-                <div>
-                  <div className="flex items-center gap-2">
-                    <span className="font-bold text-sm text-foreground">{p.label}</span>
-                    {p.badge && (
-                      <span className="text-[10px] font-bold uppercase tracking-wide bg-secondary text-white px-1.5 py-0.5 rounded-full">
-                        {p.badge}
-                      </span>
-                    )}
-                  </div>
-                  <p className="text-xs text-muted-foreground mt-0.5 leading-snug">{p.description}</p>
-                </div>
-              </div>
-              <div className="text-right flex-shrink-0">
-                <p className="font-bold text-foreground text-base">US${p.price.toFixed(2)}</p>
-                <p className="text-[10px] text-muted-foreground">{p.delivery} delivery</p>
-              </div>
-            </div>
 
-            {selected === i && (
-              <div className="mt-3 pt-3 border-t border-border/50 grid grid-cols-2 gap-x-4 gap-y-1.5">
-                {p.features.map((f: string) => (
-                  <div key={f} className="flex items-center gap-1.5 text-xs text-foreground/80">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-primary flex-shrink-0" />
-                    {f}
-                  </div>
-                ))}
-                <div className="flex items-center gap-1.5 text-xs text-foreground/80">
-                  <Clock className="w-3.5 h-3.5 text-primary flex-shrink-0" />
-                  {p.delivery} delivery
-                </div>
-                <div className="flex items-center gap-1.5 text-xs text-foreground/80">
-                  <Repeat2 className="w-3.5 h-3.5 text-primary flex-shrink-0" />
-                  {p.revisions} revisions
-                </div>
+        {/* 3-column grid of vertical cards */}
+        <div className="grid grid-cols-3 gap-2.5">
+          {packages.map((p, i) => (
+            <button
+              key={p.id}
+              type="button"
+              onClick={() => { setSelected(i); setShowForm(false); }}
+              className={`relative flex flex-col items-center text-center rounded-2xl border-2 p-3 transition-all duration-200 ${
+                selected === i ? p.activeColor + " shadow-md" : "border-border bg-white hover:border-border/80 hover:bg-accent/20"
+              }`}
+            >
+              {/* Badge top-right */}
+              {p.badge && (
+                <span className="absolute -top-2 left-1/2 -translate-x-1/2 text-[9px] font-bold uppercase tracking-wide bg-secondary text-white px-2 py-0.5 rounded-full whitespace-nowrap shadow-sm">
+                  {p.badge}
+                </span>
+              )}
+
+              {/* Emoji icon */}
+              <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-xl mt-1 mb-2 ${
+                selected === i ? "bg-white shadow-sm" : "bg-accent/40"
+              }`}>
+                {p.emoji}
               </div>
-            )}
-          </button>
-        ))}
+
+              {/* Label */}
+              <span className="font-bold text-sm text-foreground leading-none mb-1">{p.label}</span>
+
+              {/* Price */}
+              <span className="text-base font-extrabold text-foreground mt-1">
+                US${typeof p.price === "number" ? p.price.toFixed(2) : p.price}
+              </span>
+
+              {/* Delivery */}
+              <span className="text-[10px] text-muted-foreground mt-0.5 flex items-center gap-0.5">
+                <Clock className="w-2.5 h-2.5" /> {p.delivery}
+              </span>
+            </button>
+          ))}
+        </div>
+
+        {/* Expanded features row — shown below cards for selected package */}
+        <div className={`mt-3 rounded-xl border-2 p-4 transition-all ${packages[selected].activeColor}`}>
+          <p className="text-xs font-semibold text-foreground mb-2.5">{packages[selected].description}</p>
+          <div className="grid grid-cols-1 gap-1.5">
+            {packages[selected].features.map((f: string) => (
+              <div key={f} className="flex items-center gap-2 text-xs text-foreground/80">
+                <CheckCircle2 className="w-3.5 h-3.5 text-primary flex-shrink-0" />
+                {f}
+              </div>
+            ))}
+            <div className="flex items-center gap-2 text-xs text-foreground/80 mt-0.5">
+              <Repeat2 className="w-3.5 h-3.5 text-primary flex-shrink-0" />
+              {packages[selected].revisions} revisions
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* ── CTA */}
