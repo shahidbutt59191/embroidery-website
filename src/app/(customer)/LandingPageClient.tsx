@@ -165,9 +165,15 @@ function FeaturedGig({ gig, otherCount }: { gig: any; otherCount: number }) {
           </div>
 
           {/* Short desc */}
-          {descLines[0] && (
-            <div className="bg-slate-50 rounded-xl border border-border p-4">
-              <p className="text-base text-muted-foreground leading-relaxed font-medium">{renderInline(descLines[0])}</p>
+          {(gig.package_config?.landingPageDesc || descLines[0]) && (
+            <div className="bg-white rounded-xl border border-primary/20 shadow-sm p-5 relative overflow-hidden">
+              <div className="absolute top-0 left-0 w-1 h-full bg-primary" />
+              <p className="text-[10px] font-black uppercase tracking-widest text-primary mb-2">
+                About Our Service
+              </p>
+              <p className="text-sm text-foreground/80 leading-relaxed font-medium whitespace-pre-line">
+                {gig.package_config?.landingPageDesc || renderInline(descLines[0])}
+              </p>
             </div>
           )}
 
@@ -240,46 +246,7 @@ function FeaturedGig({ gig, otherCount }: { gig: any; otherCount: number }) {
         </div>
       </div>
 
-      {/* ── About / Description ── */}
-      {descLines.length > 0 && (
-        <div className="bg-white rounded-2xl border border-border shadow-sm p-8">
-          <div className="flex items-center gap-3 mb-6">
-            <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center">
-              <Shield className="w-5 h-5 text-primary" />
-            </div>
-            <div>
-              <h3 className="text-xl font-bold text-foreground">About This Service</h3>
-              <p className="text-xs text-muted-foreground">What you get with every order</p>
-            </div>
-          </div>
-          <div className="space-y-2.5 max-w-3xl">
-            {descLines.map((line: string, i: number) => {
-              const isBullet = /^[-•]\s/.test(line) || /^\*\s/.test(line);
-              const isNum = /^\d+\.\s/.test(line);
-              const isHeading = /^#+\s/.test(line);
-              if (isHeading) return <p key={i} className="font-bold text-base text-foreground mt-3">{renderInline(line.replace(/^#+\s/, ""))}</p>;
-              if (isBullet) return (
-                <div key={i} className="flex items-start gap-3">
-                  <span className="mt-1 w-4 h-4 bg-primary/15 rounded-full flex items-center justify-center flex-shrink-0">
-                    <span className="text-primary text-[9px] font-black">✓</span>
-                  </span>
-                  <span className="text-sm text-foreground/85 leading-relaxed">{renderInline(line.replace(/^[-•*]\s/, ""))}</span>
-                </div>
-              );
-              if (isNum) {
-                const num = line.match(/^\d+/)?.[0];
-                return (
-                  <div key={i} className="flex items-start gap-3">
-                    <span className="mt-0.5 w-5 h-5 bg-secondary/15 text-secondary rounded-full flex items-center justify-center flex-shrink-0 text-[10px] font-black">{num}</span>
-                    <span className="text-sm text-foreground/85 leading-relaxed">{renderInline(line.replace(/^\d+\.\s*/, ""))}</span>
-                  </div>
-                );
-              }
-              return <p key={i} className="text-sm text-foreground/80 leading-relaxed">{renderInline(line)}</p>;
-            })}
-          </div>
-        </div>
-      )}
+
 
       {/* ── FAQ ── */}
       <div className="bg-white rounded-2xl border border-border shadow-sm p-8">

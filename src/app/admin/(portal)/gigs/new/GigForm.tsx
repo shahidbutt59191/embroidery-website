@@ -200,10 +200,11 @@ export default function GigForm({ gigId, defaultValues }: {
     description: string;
     basePrice: string;
     images: string[];
-    packageConfig?: Record<string, PackageConfig>;
+    packageConfig?: Record<string, PackageConfig> & { landingPageDesc?: string };
   };
 }) {
   const [title, setTitle] = useState(defaultValues?.title ?? "");
+  const [landingPageDesc, setLandingPageDesc] = useState(defaultValues?.packageConfig?.landingPageDesc ?? "");
   const [description, setDescription] = useState(defaultValues?.description ?? "");
   const [images, setImages] = useState<string[]>(defaultValues?.images ?? []);
   const [showPreview, setShowPreview] = useState(false);
@@ -273,6 +274,7 @@ export default function GigForm({ gigId, defaultValues }: {
       basic:    { ...packages.basic,    price: parseFloat(packages.basic.price) },
       standard: { ...packages.standard, price: parseFloat(packages.standard.price) },
       premium:  { ...packages.premium,  price: parseFloat(packages.premium.price) },
+      landingPageDesc: landingPageDesc.trim(),
     };
 
     const payload = {
@@ -322,14 +324,22 @@ export default function GigForm({ gigId, defaultValues }: {
 
       {/* ── Title */}
       <div>
-        <label className="flex items-center gap-2 text-sm font-semibold text-foreground mb-2">
-          <Tag className="w-4 h-4 text-primary" /> Gig Title
-        </label>
+        <label className="block text-sm font-semibold text-foreground mb-1">Service Title *</label>
         <input type="text" required value={title} onChange={(e) => setTitle(e.target.value)}
-          className="w-full px-4 py-3 rounded-xl border border-border bg-white focus:outline-none focus:ring-2 focus:ring-primary/30 text-sm"
-          placeholder="e.g. I will do embroidery digitizing into DST, PES, JEF in 1 hour" maxLength={120}
+          className="w-full px-4 py-2.5 border border-border rounded-xl text-sm bg-white focus:outline-none focus:ring-2 focus:ring-primary/30 font-medium"
+          placeholder="e.g. I will do embroidery digitizing into dst, pes, jef file in 1 hour"
         />
         <p className="text-xs text-muted-foreground mt-1 text-right">{title.length}/120</p>
+      </div>
+
+      <div>
+        <label className="block text-sm font-semibold text-foreground mb-1">Landing Page Short Description (Optional)</label>
+        <textarea value={landingPageDesc} onChange={(e) => setLandingPageDesc(e.target.value)}
+          rows={3}
+          className="w-full px-4 py-2.5 border border-border rounded-xl text-sm bg-white focus:outline-none focus:ring-2 focus:ring-primary/30 font-medium resize-y"
+          placeholder="Short blurb shown only on the landing page (e.g. Hy, ABOUT OUR SERVICE...)"
+        />
+        <p className="text-xs text-muted-foreground mt-1">This appears directly on the landing page featured section.</p>
       </div>
 
       {/* ── Package Pricing — 3 separate editors */}
