@@ -292,8 +292,8 @@ function FeaturedGig({ gig, otherCount, portfolioImages }: { gig: any; otherCoun
           </div>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {portfolioImages.map((img) => (
-              <div key={img.id} className="relative aspect-square rounded-2xl overflow-hidden border border-border shadow-sm group cursor-pointer">
-                <img src={img.image_url} alt={img.title || "Portfolio Work"} className="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-500" />
+              <div key={img.id} className="relative aspect-square rounded-2xl overflow-hidden border border-border shadow-sm group cursor-pointer bg-white">
+                <img src={img.image_url} alt={img.title || "Portfolio Work"} className="w-full h-full object-contain p-2 group-hover:scale-[1.03] transition-transform duration-500" />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-end p-4">
                   <p className="text-white font-bold text-sm translate-y-2 group-hover:translate-y-0 transition-transform">{img.title || "Embroidery Work"}</p>
                 </div>

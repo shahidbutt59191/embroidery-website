@@ -70,8 +70,8 @@ export default function PortfolioAdminClient({ initialImages }: { initialImages:
       ) : (
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
           {images.map((img) => (
-            <div key={img.id} className="relative aspect-square group bg-slate-100 rounded-xl overflow-hidden border border-slate-200">
-              <img src={img.image_url} alt="Portfolio" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+            <div key={img.id} className="relative aspect-square group bg-white rounded-xl overflow-hidden border border-slate-200">
+              <img src={img.image_url} alt="Portfolio" className="w-full h-full object-contain p-2 group-hover:scale-105 transition-transform duration-500" />
               <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                 <button
                   onClick={() => removeImage(img.id)}
