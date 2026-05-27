@@ -130,7 +130,7 @@ function FeaturedGig({ gig, otherCount }: { gig: any; otherCount: number }) {
         <div className="lg:col-span-2 space-y-5">
           <div>
             <span className="inline-flex items-center gap-1.5 bg-primary/10 text-primary text-xs font-bold px-3 py-1.5 rounded-full mb-3">
-              <Sparkles className="w-3.5 h-3.5" /> Featured Service
+              <Sparkles className="w-3.5 h-3.5" /> Featured Embroidery Service
             </span>
             <h2 className="text-2xl font-bold text-foreground leading-snug">{gig.title}</h2>
           </div>
@@ -167,7 +167,7 @@ function FeaturedGig({ gig, otherCount }: { gig: any; otherCount: number }) {
           {/* Short desc */}
           {descLines[0] && (
             <div className="bg-slate-50 rounded-xl border border-border p-4">
-              <p className="text-sm text-muted-foreground leading-relaxed">{renderInline(descLines[0])}</p>
+              <p className="text-base text-muted-foreground leading-relaxed font-medium">{renderInline(descLines[0])}</p>
             </div>
           )}
 
@@ -361,7 +361,7 @@ export default function LandingPageClient({
   const [activeTab, setActiveTab] = useState<"featured" | "all">("featured");
 
   const tabs = [
-    { id: "featured", label: "Featured Service", icon: Sparkles },
+    { id: "featured", label: "Featured Embroidery Service", icon: Sparkles },
     { id: "all", label: `All Services (${allGigs.length})`, icon: LayoutGrid },
   ];
 

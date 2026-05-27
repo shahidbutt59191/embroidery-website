@@ -21,7 +21,7 @@ export default async function AdminPortalLayout({ children }: { children: React.
 
   const navItems = [
     { href: "/admin", icon: LayoutDashboard, label: "Dashboard" },
-    { href: "/admin/gigs", icon: Scissors, label: "Manage Gigs" },
+    { href: "/admin/gigs", icon: Scissors, label: "Manage Services" },
     { href: "/admin/orders", icon: ListOrdered, label: "Orders" },
     { href: "/admin/chat", icon: MessageSquare, label: "Inbox", badge: unreadCount },
   ];
