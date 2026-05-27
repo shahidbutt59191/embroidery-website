@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import Link from "next/link";
-import { ArrowLeft, Star, BadgeCheck, Clock, Repeat2, Shield, Zap } from "lucide-react";
+import { ArrowLeft, BadgeCheck, Clock, Repeat2, Shield, Zap } from "lucide-react";
 import GigPackagePanel from "./GigPackagePanel";
 import GigGallery from "./GigGallery";
 
@@ -80,35 +80,24 @@ export default async function CustomerGigPage({ params }: { params: Promise<{ id
 
             {/* Title Card */}
             <div>
-              <h1 className="text-2xl sm:text-3xl font-bold text-foreground leading-tight mb-4">
+              <h1 className="text-2xl sm:text-3xl font-bold text-foreground leading-tight mb-5">
                 {gig.title}
               </h1>
 
-              {/* Seller strip */}
-              <div className="flex flex-wrap items-center gap-4">
-                <div className="flex items-center gap-2.5">
-                  <div className="w-9 h-9 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-white font-bold text-sm ring-2 ring-primary/20">
-                    SM
-                  </div>
-                  <div>
-                    <div className="flex items-center gap-1.5">
-                      <span className="font-semibold text-sm text-foreground">StitchMarket</span>
-                      <BadgeCheck className="w-4 h-4 text-primary" />
-                    </div>
-                    <p className="text-xs text-muted-foreground">Expert Digitizer</p>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-1">
-                  {[1,2,3,4,5].map(s => <Star key={s} className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />)}
-                  <span className="text-sm font-bold text-foreground ml-1">5.0</span>
-                  <span className="text-xs text-muted-foreground ml-0.5">(128)</span>
-                </div>
-
-                <div className="flex items-center gap-1.5 text-xs text-muted-foreground bg-green-50 text-green-700 px-3 py-1 rounded-full border border-green-200">
-                  <span className="w-1.5 h-1.5 bg-green-500 rounded-full inline-block"></span>
-                  3 orders in queue
-                </div>
+              {/* Company service badges — NOT a freelancer profile */}
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="inline-flex items-center gap-1.5 bg-primary/10 text-primary text-xs font-semibold px-3 py-1.5 rounded-lg">
+                  <Shield className="w-3.5 h-3.5" /> Professional Service
+                </span>
+                <span className="inline-flex items-center gap-1.5 bg-secondary/10 text-secondary text-xs font-semibold px-3 py-1.5 rounded-lg">
+                  <Zap className="w-3.5 h-3.5" /> Fast Turnaround
+                </span>
+                <span className="inline-flex items-center gap-1.5 bg-green-50 text-green-700 text-xs font-semibold px-3 py-1.5 rounded-lg border border-green-100">
+                  <Repeat2 className="w-3.5 h-3.5" /> Unlimited Revisions
+                </span>
+                <span className="inline-flex items-center gap-1.5 bg-amber-50 text-amber-700 text-xs font-semibold px-3 py-1.5 rounded-lg border border-amber-100">
+                  <BadgeCheck className="w-3.5 h-3.5" /> Quality Guaranteed
+                </span>
               </div>
             </div>
 

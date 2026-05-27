@@ -339,7 +339,7 @@ export default function GigForm({ gigId, defaultValues }: {
           <h2 className="text-sm font-bold text-foreground">Package Pricing</h2>
           <span className="text-xs text-muted-foreground">— set each package independently</span>
         </div>
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <div className="space-y-4">
           {PKG_META.map(meta => (
             <PackageEditor
               key={meta.id}
