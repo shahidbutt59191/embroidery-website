@@ -24,6 +24,9 @@ export default async function Navbar() {
           <Link href="/#services" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
             Services
           </Link>
+          <Link href="/#portfolio" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
+            Portfolio
+          </Link>
           <Link href="/#how-it-works" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
             How It Works
           </Link>

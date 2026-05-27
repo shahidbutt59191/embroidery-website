@@ -74,7 +74,7 @@ function GigCard({ gig }: { gig: any }) {
 }
 
 // ── Featured Gig — full detail inline ──────────────────────
-function FeaturedGig({ gig, otherCount }: { gig: any; otherCount: number }) {
+function FeaturedGig({ gig, otherCount, portfolioImages }: { gig: any; otherCount: number; portfolioImages: any[] }) {
   const [currentImg, setCurrentImg] = useState(0);
   const allImages = [...(gig.image_url ? [gig.image_url] : []), ...(gig.extraImages || [])];
   
@@ -280,7 +280,28 @@ function FeaturedGig({ gig, otherCount }: { gig: any; otherCount: number }) {
         </div>
       </div>
 
-
+      {/* ── Portfolio ── */}
+      {portfolioImages && portfolioImages.length > 0 && (
+        <div id="portfolio" className="scroll-mt-24 pt-4">
+          <div className="text-center mb-8">
+            <div className="inline-flex items-center gap-2 bg-primary/10 text-primary px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest mb-3">
+              ✦ Our Work
+            </div>
+            <h3 className="text-2xl font-bold text-foreground">Recent Digitizing Portfolio</h3>
+            <p className="text-muted-foreground text-sm mt-2">Explore some of our recently digitized embroidery designs</p>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {portfolioImages.map((img) => (
+              <div key={img.id} className="relative aspect-square rounded-2xl overflow-hidden border border-border shadow-sm group cursor-pointer">
+                <img src={img.image_url} alt={img.title || "Portfolio Work"} className="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-500" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-end p-4">
+                  <p className="text-white font-bold text-sm translate-y-2 group-hover:translate-y-0 transition-transform">{img.title || "Embroidery Work"}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* ── FAQ ── */}
       <div className="bg-white rounded-2xl border border-border shadow-sm p-8">
@@ -355,9 +376,11 @@ function AllServicesGrid({ gigs }: { gigs: any[] }) {
 export default function LandingPageClient({
   featuredGig,
   allGigs,
+  portfolioImages,
 }: {
   featuredGig: any | null;
   allGigs: any[];
+  portfolioImages: any[];
 }) {
   const [activeTab, setActiveTab] = useState<"featured" | "all">("featured");
 
@@ -419,7 +442,7 @@ export default function LandingPageClient({
       {/* ── Tab content ── */}
       {activeTab === "featured" ? (
         featuredGig ? (
-          <FeaturedGig gig={featuredGig} otherCount={allGigs.length - 1} />
+          <FeaturedGig gig={featuredGig} otherCount={allGigs.length - 1} portfolioImages={portfolioImages} />
         ) : (
           <div className="max-w-6xl mx-auto px-4 py-20 text-center">
             <Package className="w-16 h-16 mx-auto text-muted-foreground/30 mb-4" />

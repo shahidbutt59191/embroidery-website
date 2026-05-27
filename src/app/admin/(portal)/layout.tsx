@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { LayoutDashboard, Scissors, ListOrdered, MessageSquare, Bell } from "lucide-react";
+import { LayoutDashboard, Scissors, ListOrdered, MessageSquare, Bell, ImagePlus } from "lucide-react";
 import LogoutButton from "@/components/layout/LogoutButton";
 import AdminTopBar from "./AdminTopBar";
 import { createClient } from "@/lib/supabase/server";
@@ -22,6 +22,7 @@ export default async function AdminPortalLayout({ children }: { children: React.
   const navItems = [
     { href: "/admin", icon: LayoutDashboard, label: "Dashboard" },
     { href: "/admin/gigs", icon: Scissors, label: "Manage Services" },
+    { href: "/admin/portfolio", icon: ImagePlus, label: "Portfolio" },
     { href: "/admin/orders", icon: ListOrdered, label: "Orders" },
     { href: "/admin/chat", icon: MessageSquare, label: "Inbox", badge: unreadCount },
   ];

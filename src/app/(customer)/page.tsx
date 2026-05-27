@@ -26,10 +26,18 @@ export default async function LandingPage() {
     } catch (err) {}
   }
 
+  // Fetch Portfolio Images
+  const { data: portfolioImages } = await supabase
+    .from("portfolio_images")
+    .select("*")
+    .order("sort_order", { ascending: true })
+    .order("created_at", { ascending: false });
+
   return (
     <LandingPageClient
       featuredGig={featuredGig}
       allGigs={gigList}
+      portfolioImages={portfolioImages || []}
     />
   );
 }
