@@ -3,12 +3,15 @@ import Link from "next/link";
 import { ArrowLeft, BadgeCheck, Clock, Repeat2, Shield, Zap, Users, Award } from "lucide-react";
 import GigPackagePanel from "./GigPackagePanel";
 import GigGallery from "./GigGallery";
+import AskQuestionButton from "./AskQuestionButton";
 
-// Inline markdown renderer
+// Inline markdown renderer (server-safe, no hooks)
 function renderInline(text: string): React.ReactNode[] {
   const parts: React.ReactNode[] = [];
   const regex = /(\*\*(.+?)\*\*)|(\*(.+?)\*)|==(.+?)==/g;
-  let last = 0; let m: RegExpExecArray | null; let k = 0;
+  let last = 0;
+  let m: RegExpExecArray | null;
+  let k = 0;
   while ((m = regex.exec(text)) !== null) {
     if (m.index > last) parts.push(text.slice(last, m.index));
     if (m[1]) parts.push(<strong key={k++} className="font-bold text-foreground">{m[2]}</strong>);
@@ -71,10 +74,10 @@ export default async function CustomerGigPage({ params }: { params: Promise<{ id
 
       <div className="max-w-6xl mx-auto px-4 py-8 space-y-10">
 
-        {/* ══ SECTION 1: Hero — Gallery + Title side by side ══ */}
+        {/* ══ SECTION 1: Hero — Gallery + Title ══ */}
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 items-start">
 
-          {/* Gallery — takes more space */}
+          {/* Gallery — 3/5 width */}
           <div className="lg:col-span-3">
             <GigGallery images={allImages} title={gig.title} />
           </div>
@@ -101,7 +104,7 @@ export default async function CustomerGigPage({ params }: { params: Promise<{ id
               </div>
             </div>
 
-            {/* Quick stats row */}
+            {/* Quick stats */}
             <div className="grid grid-cols-3 gap-3">
               {[
                 { icon: Award, value: "5★", label: "Quality" },
@@ -116,39 +119,32 @@ export default async function CustomerGigPage({ params }: { params: Promise<{ id
               ))}
             </div>
 
-            {/* Short intro excerpt */}
+            {/* Short intro */}
             {descLines.length > 0 && (
               <div className="bg-white rounded-xl border border-border p-4 shadow-sm">
-                <p className="text-sm text-muted-foreground leading-relaxed line-clamp-4">
+                <p className="text-sm text-muted-foreground leading-relaxed">
                   {renderInline(descLines[0])}
                 </p>
               </div>
             )}
 
-            {/* Ask a question */}
-            <button
-              onClick={() => {}}
-              className="w-full border-2 border-border hover:border-primary text-muted-foreground hover:text-primary py-2.5 rounded-xl font-semibold text-sm flex items-center justify-center gap-2 transition-all"
-              id="ask-question-btn"
-            >
-              💬 Have a question? Chat with us
-            </button>
-            <script dangerouslySetInnerHTML={{ __html: `document.getElementById('ask-question-btn').onclick=function(){window.dispatchEvent(new CustomEvent('open-support-chat'))}` }} />
+            {/* Chat button — client component */}
+            <AskQuestionButton />
           </div>
         </div>
 
-        {/* ══ SECTION 2: Choose Your Package — Full Width ══ */}
+        {/* ══ SECTION 2: Package Cards — Full Width ══ */}
         <div>
-          {/* Section header */}
           <div className="text-center mb-8">
             <div className="inline-flex items-center gap-2 bg-primary/10 text-primary px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest mb-3">
               ✦ Our Packages
             </div>
             <h2 className="text-2xl font-bold text-foreground">Choose the Right Package for You</h2>
-            <p className="text-muted-foreground text-sm mt-2">Select a plan that fits your project — all include unlimited revisions</p>
+            <p className="text-muted-foreground text-sm mt-2">
+              All packages include unlimited revisions until you're satisfied
+            </p>
           </div>
 
-          {/* Full-width package panel */}
           <GigPackagePanel gig={gig} properties={properties || []} userId={user?.id || null} />
         </div>
 
@@ -168,7 +164,6 @@ export default async function CustomerGigPage({ params }: { params: Promise<{ id
             {descLines.map((line: string, i: number) => {
               const isBullet = /^[-*•]\s/.test(line);
               const isNum = /^\d+\.\s/.test(line);
-
               if (isBullet) return (
                 <div key={i} className="flex items-start gap-3">
                   <span className="mt-0.5 w-5 h-5 bg-primary/10 rounded-full flex items-center justify-center flex-shrink-0">
