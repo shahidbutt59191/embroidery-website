@@ -15,6 +15,17 @@ export default async function LandingPage() {
   // First gig is the featured one; all gigs go to the All Services tab
   const featuredGig = gigList[0] ?? null;
 
+  if (featuredGig) {
+    try {
+      const { data: images } = await supabase
+        .from("gig_images")
+        .select("image_url")
+        .eq("gig_id", featuredGig.id)
+        .order("sort_order", { ascending: true });
+      featuredGig.extraImages = (images || []).map((img) => img.image_url);
+    } catch (err) {}
+  }
+
   return (
     <LandingPageClient
       featuredGig={featuredGig}

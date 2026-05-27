@@ -5,7 +5,7 @@ import Link from "next/link";
 import {
   ArrowRight, Scissors, Clock, Repeat2, CheckCircle2,
   BadgeCheck, Shield, Zap, Users, Award, Star,
-  LayoutGrid, Sparkles, Package
+  LayoutGrid, Sparkles, Package, ChevronLeft, ChevronRight
 } from "lucide-react";
 
 // ── Inline markdown renderer ────────────────────────────────
@@ -75,6 +75,9 @@ function GigCard({ gig }: { gig: any }) {
 
 // ── Featured Gig — full detail inline ──────────────────────
 function FeaturedGig({ gig, otherCount }: { gig: any; otherCount: number }) {
+  const [currentImg, setCurrentImg] = useState(0);
+  const allImages = [...(gig.image_url ? [gig.image_url] : []), ...(gig.extraImages || [])];
+  
   const cfg = gig.package_config;
   const packages = [
     {
@@ -110,9 +113,32 @@ function FeaturedGig({ gig, otherCount }: { gig: any; otherCount: number }) {
 
         {/* Image */}
         <div className="lg:col-span-3">
-          <div className="relative rounded-2xl overflow-hidden bg-white border border-border shadow-sm" style={{ aspectRatio: "4/3" }}>
-            {gig.image_url ? (
-              <img src={gig.image_url} alt={gig.title} className="w-full h-full object-contain" />
+          <div className="relative rounded-2xl overflow-hidden bg-white border border-border shadow-sm group/main" style={{ aspectRatio: "4/3" }}>
+            {allImages.length > 0 ? (
+              <div className="relative w-full h-full group/slider">
+                <img src={allImages[currentImg]} alt={gig.title} className="w-full h-full object-contain group-hover/main:scale-[1.02] transition-transform duration-700" />
+                {allImages.length > 1 && (
+                  <>
+                    <button
+                      onClick={(e) => { e.preventDefault(); setCurrentImg((c) => (c === 0 ? allImages.length - 1 : c - 1)); }}
+                      className="absolute left-3 top-1/2 -translate-y-1/2 w-9 h-9 bg-black/40 hover:bg-black/70 backdrop-blur text-white rounded-full flex items-center justify-center opacity-0 group-hover/slider:opacity-100 transition-all z-20 shadow-md"
+                    >
+                      <ChevronLeft className="w-5 h-5 pr-0.5" />
+                    </button>
+                    <button
+                      onClick={(e) => { e.preventDefault(); setCurrentImg((c) => (c === allImages.length - 1 ? 0 : c + 1)); }}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 bg-black/40 hover:bg-black/70 backdrop-blur text-white rounded-full flex items-center justify-center opacity-0 group-hover/slider:opacity-100 transition-all z-20 shadow-md"
+                    >
+                      <ChevronRight className="w-5 h-5 pl-0.5" />
+                    </button>
+                    <div className="absolute bottom-24 left-0 right-0 flex justify-center gap-1.5 z-20 opacity-0 group-hover/slider:opacity-100 transition-opacity">
+                      {allImages.map((_, idx) => (
+                        <div key={idx} className={`w-2 h-2 rounded-full transition-all ${idx === currentImg ? "bg-white scale-110" : "bg-white/50"}`} />
+                      ))}
+                    </div>
+                  </>
+                )}
+              </div>
             ) : (
               <div className="w-full h-full bg-gradient-to-br from-primary/10 to-secondary/10 flex items-center justify-center">
                 <Scissors className="w-16 h-16 text-primary/30" />
