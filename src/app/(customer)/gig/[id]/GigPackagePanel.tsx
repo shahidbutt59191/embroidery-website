@@ -11,48 +11,36 @@ import {
 
 function buildPackages(gig: any) {
   const base = parseFloat(gig.base_price) || 5;
+  const cfg = gig.package_config;
+
+  // Use DB config if available, otherwise fall back to auto-calculated
   return [
     {
-      id: "basic",
-      label: "Basic",
-      emoji: "⚡",
-      icon: Zap,
-      price: base,
-      description: "Simple logo digitizing — perfect for left chest designs",
-      delivery: "1 day",
+      id: "basic", label: "Basic", emoji: "⚡", icon: Zap,
+      price: cfg?.basic?.price ?? base,
+      description: cfg?.basic?.description ?? "Simple logo digitizing — perfect for left chest designs",
+      delivery: cfg?.basic?.delivery ? `${cfg.basic.delivery} day${cfg.basic.delivery > 1 ? "s" : ""}` : "1 day",
       revisions: "Unlimited",
-      features: ["Up to 5,000 stitches", ".DST .PES .JEF formats", "1 revision round"],
-      color: "border-border hover:border-primary/40",
-      activeColor: "border-primary bg-primary/5",
-      badge: "",
+      features: cfg?.basic?.features ?? ["Up to 5,000 stitches", ".DST .PES .JEF formats", "1 revision round"],
+      color: "border-border hover:border-primary/40", activeColor: "border-primary bg-primary/5", badge: "",
     },
     {
-      id: "standard",
-      label: "Standard",
-      emoji: "🏆",
-      icon: Award,
-      price: Math.round(base * 2.5 * 100) / 100,
-      description: "Medium complexity — great for detailed logos & text",
-      delivery: "2 days",
+      id: "standard", label: "Standard", emoji: "🏆", icon: Award,
+      price: cfg?.standard?.price ?? Math.round(base * 2.5 * 100) / 100,
+      description: cfg?.standard?.description ?? "Medium complexity — great for detailed logos & text",
+      delivery: cfg?.standard?.delivery ? `${cfg.standard.delivery} day${cfg.standard.delivery > 1 ? "s" : ""}` : "2 days",
       revisions: "Unlimited",
-      features: ["Up to 15,000 stitches", "All major formats", "2 revision rounds", "Run sheet included"],
-      color: "border-border hover:border-secondary/40",
-      activeColor: "border-secondary bg-secondary/5",
-      badge: "Most Popular",
+      features: cfg?.standard?.features ?? ["Up to 15,000 stitches", "All major formats", "2 revision rounds", "Run sheet included"],
+      color: "border-border hover:border-secondary/40", activeColor: "border-secondary bg-secondary/5", badge: "Most Popular",
     },
     {
-      id: "premium",
-      label: "Premium",
-      emoji: "✨",
-      icon: Sparkles,
-      price: Math.round(base * 5 * 100) / 100,
-      description: "Complex designs, 3D puff, patches — no limits",
-      delivery: "3 days",
+      id: "premium", label: "Premium", emoji: "✨", icon: Sparkles,
+      price: cfg?.premium?.price ?? Math.round(base * 5 * 100) / 100,
+      description: cfg?.premium?.description ?? "Complex designs, 3D puff, patches — no limits",
+      delivery: cfg?.premium?.delivery ? `${cfg.premium.delivery} day${cfg.premium.delivery > 1 ? "s" : ""}` : "3 days",
       revisions: "Unlimited",
-      features: ["Unlimited stitches", "All formats + 3D puff", "Unlimited revisions", "Run sheet + sew-out scan", "Priority support"],
-      color: "border-border hover:border-amber-400/40",
-      activeColor: "border-amber-400 bg-amber-50",
-      badge: "Best Value",
+      features: cfg?.premium?.features ?? ["Unlimited stitches", "All formats + 3D puff", "Unlimited revisions", "Run sheet + sew-out scan", "Priority support"],
+      color: "border-border hover:border-amber-400/40", activeColor: "border-amber-400 bg-amber-50", badge: "Best Value",
     },
   ];
 }
@@ -189,7 +177,7 @@ export default function GigPackagePanel({ gig, properties, userId }: {
 
             {selected === i && (
               <div className="mt-3 pt-3 border-t border-border/50 grid grid-cols-2 gap-x-4 gap-y-1.5">
-                {p.features.map(f => (
+                {p.features.map((f: string) => (
                   <div key={f} className="flex items-center gap-1.5 text-xs text-foreground/80">
                     <CheckCircle2 className="w-3.5 h-3.5 text-primary flex-shrink-0" />
                     {f}

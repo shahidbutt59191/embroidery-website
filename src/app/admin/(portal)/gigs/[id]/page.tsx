@@ -64,6 +64,7 @@ export default async function GigDetailsPage({ params }: { params: Promise<{ id:
             description: gig.description || "",
             basePrice: String(gig.base_price),
             images: allImages,
+            packageConfig: gig.package_config || undefined,
           }}
         />
       </div>
