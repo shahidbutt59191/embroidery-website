@@ -138,67 +138,85 @@ export default function GigPackagePanel({ gig, properties, userId }: {
   return (
     <div className="space-y-4">
 
-      {/* ── Package Cards — 3 vertical side-by-side */}
+      {/* ── Package Cards — Hostinger-style full pricing cards */}
       <div>
-        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-widest mb-3">Select a Package</p>
+        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-widest mb-4">Select a Package</p>
 
-        {/* 3-column grid of vertical cards */}
-        <div className="grid grid-cols-3 gap-2.5">
-          {packages.map((p, i) => (
-            <button
-              key={p.id}
-              type="button"
-              onClick={() => { setSelected(i); setShowForm(false); }}
-              className={`relative flex flex-col items-center text-center rounded-2xl border-2 p-3 transition-all duration-200 ${
-                selected === i ? p.activeColor + " shadow-md" : "border-border bg-white hover:border-border/80 hover:bg-accent/20"
-              }`}
-            >
-              {/* Badge top-right */}
-              {p.badge && (
-                <span className="absolute -top-2 left-1/2 -translate-x-1/2 text-[9px] font-bold uppercase tracking-wide bg-secondary text-white px-2 py-0.5 rounded-full whitespace-nowrap shadow-sm">
-                  {p.badge}
-                </span>
-              )}
+        <div className="grid grid-cols-3 gap-3">
+          {packages.map((p, i) => {
+            const isSelected = selected === i;
+            return (
+              <div
+                key={p.id}
+                className={`relative flex flex-col rounded-2xl border-2 overflow-hidden transition-all duration-200 ${
+                  isSelected
+                    ? "border-primary shadow-lg shadow-primary/10"
+                    : "border-border bg-white hover:border-primary/40 hover:shadow-md"
+                }`}
+              >
+                {/* Badge */}
+                {p.badge ? (
+                  <div className="bg-secondary text-white text-[9px] font-bold uppercase tracking-widest text-center py-1.5 px-2">
+                    {p.badge}
+                  </div>
+                ) : (
+                  <div className="h-[26px]" /> /* spacer to align cards */
+                )}
 
-              {/* Emoji icon */}
-              <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-xl mt-1 mb-2 ${
-                selected === i ? "bg-white shadow-sm" : "bg-accent/40"
-              }`}>
-                {p.emoji}
+                {/* Card body */}
+                <div className="flex flex-col flex-1 p-3 text-center">
+                  {/* Package name */}
+                  <p className="text-xs font-semibold text-muted-foreground mt-1">{p.label}</p>
+
+                  {/* Price */}
+                  <div className="mt-2 mb-1">
+                    <span className="text-2xl font-black text-foreground">
+                      ${typeof p.price === "number" ? p.price.toFixed(2) : p.price}
+                    </span>
+                  </div>
+
+                  {/* Delivery */}
+                  <p className="text-[10px] text-muted-foreground mb-3 flex items-center justify-center gap-1">
+                    <Clock className="w-2.5 h-2.5" /> {p.delivery}
+                  </p>
+
+                  {/* Select button */}
+                  <button
+                    type="button"
+                    onClick={() => { setSelected(i); setShowForm(false); }}
+                    className={`w-full py-2 rounded-xl text-xs font-bold transition-all mb-3 ${
+                      isSelected
+                        ? "bg-primary text-white shadow-sm"
+                        : "bg-primary/10 text-primary hover:bg-primary hover:text-white"
+                    }`}
+                  >
+                    {isSelected ? "✓ Selected" : "Select"}
+                  </button>
+
+                  {/* Divider */}
+                  <div className="border-t border-border mb-3" />
+
+                  {/* Features */}
+                  <ul className="space-y-1.5 text-left">
+                    {p.features.map((f: string) => (
+                      <li key={f} className="flex items-start gap-1.5 text-[11px] text-foreground/80">
+                        <CheckCircle2 className="w-3 h-3 text-primary flex-shrink-0 mt-0.5" />
+                        <span>{f}</span>
+                      </li>
+                    ))}
+                    <li className="flex items-start gap-1.5 text-[11px] text-foreground/80">
+                      <Repeat2 className="w-3 h-3 text-primary flex-shrink-0 mt-0.5" />
+                      <span>{p.revisions} revisions</span>
+                    </li>
+                  </ul>
+                </div>
               </div>
-
-              {/* Label */}
-              <span className="font-bold text-sm text-foreground leading-none mb-1">{p.label}</span>
-
-              {/* Price */}
-              <span className="text-base font-extrabold text-foreground mt-1">
-                US${typeof p.price === "number" ? p.price.toFixed(2) : p.price}
-              </span>
-
-              {/* Delivery */}
-              <span className="text-[10px] text-muted-foreground mt-0.5 flex items-center gap-0.5">
-                <Clock className="w-2.5 h-2.5" /> {p.delivery}
-              </span>
-            </button>
-          ))}
+            );
+          })}
         </div>
 
-        {/* Expanded features row — shown below cards for selected package */}
-        <div className={`mt-3 rounded-xl border-2 p-4 transition-all ${packages[selected].activeColor}`}>
-          <p className="text-xs font-semibold text-foreground mb-2.5">{packages[selected].description}</p>
-          <div className="grid grid-cols-1 gap-1.5">
-            {packages[selected].features.map((f: string) => (
-              <div key={f} className="flex items-center gap-2 text-xs text-foreground/80">
-                <CheckCircle2 className="w-3.5 h-3.5 text-primary flex-shrink-0" />
-                {f}
-              </div>
-            ))}
-            <div className="flex items-center gap-2 text-xs text-foreground/80 mt-0.5">
-              <Repeat2 className="w-3.5 h-3.5 text-primary flex-shrink-0" />
-              {packages[selected].revisions} revisions
-            </div>
-          </div>
-        </div>
+        {/* Description of selected */}
+        <p className="text-xs text-muted-foreground mt-3 text-center italic">{packages[selected].description}</p>
       </div>
 
       {/* ── CTA */}
@@ -207,7 +225,7 @@ export default function GigPackagePanel({ gig, properties, userId }: {
           onClick={() => setShowForm(true)}
           className="w-full bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary text-white py-3.5 rounded-2xl font-bold text-sm flex items-center justify-center gap-2 shadow-md hover:shadow-lg transition-all"
         >
-          Continue with {pkg.label} — US${pkg.price.toFixed(2)} <ArrowRight className="w-4 h-4" />
+          Continue with {pkg.label} — US${typeof pkg.price === "number" ? pkg.price.toFixed(2) : pkg.price} <ArrowRight className="w-4 h-4" />
         </button>
       ) : (
         <button
