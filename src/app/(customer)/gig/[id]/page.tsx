@@ -5,21 +5,33 @@ import GigPackagePanel from "./GigPackagePanel";
 import GigGallery from "./GigGallery";
 import AskQuestionButton from "./AskQuestionButton";
 
-// Inline markdown renderer (server-safe, no hooks)
+// Robust inline markdown renderer — handles **bold**, *italic*, ==highlight==
 function renderInline(text: string): React.ReactNode[] {
   const parts: React.ReactNode[] = [];
-  const regex = /(\*\*(.+?)\*\*)|(\*(.+?)\*)|==(.+?)==/g;
+  // Order matters: bold (**) before italic (*) to avoid conflict
+  const regex = /(\*\*([^*]+?)\*\*)|(\*([^*]+?)\*)|==([^=]+?)==/g;
   let last = 0;
   let m: RegExpExecArray | null;
   let k = 0;
   while ((m = regex.exec(text)) !== null) {
-    if (m.index > last) parts.push(text.slice(last, m.index));
-    if (m[1]) parts.push(<strong key={k++} className="font-bold text-foreground">{m[2]}</strong>);
-    else if (m[3]) parts.push(<em key={k++}>{m[4]}</em>);
-    else if (m[5]) parts.push(<mark key={k++} className="bg-secondary/20 text-secondary px-1 rounded not-italic font-medium">{m[5]}</mark>);
+    if (m.index > last) parts.push(<span key={k++}>{text.slice(last, m.index)}</span>);
+    if (m[1]) {
+      // **bold**
+      parts.push(<strong key={k++} style={{ fontWeight: 700, color: "inherit" }}>{m[2]}</strong>);
+    } else if (m[3]) {
+      // *italic*
+      parts.push(<em key={k++} style={{ fontStyle: "italic" }}>{m[4]}</em>);
+    } else if (m[5]) {
+      // ==highlight==
+      parts.push(
+        <mark key={k++} style={{ background: "rgba(var(--secondary-rgb,34,197,94),0.15)", color: "hsl(var(--secondary))", padding: "1px 6px", borderRadius: 4, fontWeight: 600, fontStyle: "normal" }}>
+          {m[5]}
+        </mark>
+      );
+    }
     last = m.index + m[0].length;
   }
-  if (last < text.length) parts.push(text.slice(last));
+  if (last < text.length) parts.push(<span key={k++}>{text.slice(last)}</span>);
   return parts;
 }
 
@@ -160,30 +172,50 @@ export default async function CustomerGigPage({ params }: { params: Promise<{ id
             </div>
           </div>
 
-          <div className="text-sm text-muted-foreground leading-relaxed space-y-3 max-w-3xl">
+          <div className="space-y-2.5 max-w-3xl">
             {descLines.map((line: string, i: number) => {
-              const isBullet = /^[-*•]\s/.test(line);
+              // Skip lines that are pure asterisks used as bullets
+              const isBullet = /^[-•]\s/.test(line) || /^\*\s/.test(line);
               const isNum = /^\d+\.\s/.test(line);
-              if (isBullet) return (
-                <div key={i} className="flex items-start gap-3">
-                  <span className="mt-0.5 w-5 h-5 bg-primary/10 rounded-full flex items-center justify-center flex-shrink-0">
-                    <span className="text-primary text-[10px] font-bold">✓</span>
-                  </span>
-                  <span className="text-foreground/80">{renderInline(line.replace(/^[-*•]\s/, ""))}</span>
-                </div>
-              );
-              if (isNum) {
-                const num = line.match(/^\d+/)?.[0];
+              const isHeading = /^#+\s/.test(line);
+
+              if (isHeading) {
+                const headText = line.replace(/^#+\s/, "");
+                return (
+                  <p key={i} className="font-bold text-base text-foreground mt-3">
+                    {renderInline(headText)}
+                  </p>
+                );
+              }
+              if (isBullet) {
+                const bulletText = line.replace(/^[-•*]\s/, "");
                 return (
                   <div key={i} className="flex items-start gap-3">
-                    <span className="mt-0.5 w-5 h-5 bg-secondary/10 text-secondary rounded-full flex items-center justify-center flex-shrink-0 text-[10px] font-bold">{num}</span>
-                    <span className="text-foreground/80">{renderInline(line.replace(/^\d+\.\s*/, ""))}</span>
+                    <span className="mt-1 w-4 h-4 bg-primary/15 rounded-full flex items-center justify-center flex-shrink-0">
+                      <span className="text-primary text-[9px] font-black">✓</span>
+                    </span>
+                    <span className="text-sm text-foreground/85 leading-relaxed">{renderInline(bulletText)}</span>
                   </div>
                 );
               }
-              return <p key={i} className="text-foreground/80">{renderInline(line)}</p>;
+              if (isNum) {
+                const num = line.match(/^\d+/)?.[0];
+                const numText = line.replace(/^\d+\.\s*/, "");
+                return (
+                  <div key={i} className="flex items-start gap-3">
+                    <span className="mt-0.5 w-5 h-5 bg-secondary/15 text-secondary rounded-full flex items-center justify-center flex-shrink-0 text-[10px] font-black shrink-0">{num}</span>
+                    <span className="text-sm text-foreground/85 leading-relaxed">{renderInline(numText)}</span>
+                  </div>
+                );
+              }
+              // Plain paragraph
+              return (
+                <p key={i} className="text-sm text-foreground/80 leading-relaxed">
+                  {renderInline(line)}
+                </p>
+              );
             })}
-            {descLines.length === 0 && <p className="italic">Description coming soon.</p>}
+            {descLines.length === 0 && <p className="italic text-sm text-muted-foreground">Description coming soon.</p>}
           </div>
         </div>
 

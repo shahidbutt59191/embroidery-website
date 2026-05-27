@@ -26,12 +26,12 @@ function GigCard({ gig }: { gig: any }) {
       className="group relative bg-white rounded-2xl border border-border overflow-hidden hover:shadow-2xl hover:-translate-y-1.5 transition-all duration-300 flex flex-col"
     >
       {/* Image */}
-      <div className="relative overflow-hidden" style={{ aspectRatio: "4/3" }}>
+      <div className="relative overflow-hidden bg-white border-b border-border" style={{ aspectRatio: "4/3" }}>
         {gig.image_url ? (
           <img
             src={gig.image_url}
             alt={gig.title}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+            className="w-full h-full object-contain group-hover:scale-[1.03] transition-transform duration-500"
           />
         ) : (
           <div className="w-full h-full bg-gradient-to-br from-primary/10 to-secondary/10 flex items-center justify-center">

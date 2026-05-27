@@ -27,18 +27,18 @@ export default function GigGallery({ images, title }: { images: string[]; title:
         />
 
         {/* Main image container */}
-        <div className="relative rounded-2xl overflow-hidden bg-slate-100 cursor-pointer group"
+        <div className="relative rounded-2xl overflow-hidden bg-white border border-border/40 cursor-pointer group"
           style={{ aspectRatio: "4/3" }}
           onClick={() => setPreviewSrc(allImages[active])}
         >
           <img
             src={allImages[active]}
             alt={title}
-            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+            className="w-full h-full object-contain transition-transform duration-500 group-hover:scale-[1.03]"
           />
 
-          {/* Dark gradient overlay at bottom */}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
+          {/* Subtle gradient overlay at bottom only */}
+          <div className="absolute bottom-0 left-0 right-0 h-20 bg-gradient-to-t from-black/40 to-transparent" />
 
           {/* Fullscreen hint */}
           <div className="absolute top-3 right-3 bg-white/20 backdrop-blur-sm rounded-lg px-2.5 py-1.5 flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity border border-white/30">
