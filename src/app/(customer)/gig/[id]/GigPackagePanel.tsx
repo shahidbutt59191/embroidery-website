@@ -5,64 +5,68 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { CldUploadWidget } from "next-cloudinary";
 import {
-  Clock, RefreshCw, UploadCloud, CheckCircle2, Loader2,
-  ArrowRight, MessageSquare, ChevronDown, ChevronUp, X
+  Clock, Repeat2, CheckCircle2, UploadCloud, Loader2,
+  ArrowRight, MessageSquare, X, Sparkles, Award, Zap
 } from "lucide-react";
 
-// ── Package definitions (the 3 tabs)
-// We derive them from the gig base_price and a 2x/3x multiplier.
-// In a real system you'd have separate package rows in DB.
 function buildPackages(gig: any) {
   const base = parseFloat(gig.base_price) || 5;
   return [
     {
       id: "basic",
       label: "Basic",
+      emoji: "⚡",
+      icon: Zap,
       price: base,
-      title: "Simple Logo",
-      description: "Digitize one simple logo up to 5,000 stitches",
-      delivery: "1-day delivery",
-      revisions: "Unlimited Revisions",
+      description: "Simple logo digitizing — perfect for left chest designs",
+      delivery: "1 day",
+      revisions: "Unlimited",
       features: ["Up to 5,000 stitches", ".DST .PES .JEF formats", "1 revision round"],
+      color: "border-border hover:border-primary/40",
+      activeColor: "border-primary bg-primary/5",
+      badge: "",
     },
     {
       id: "standard",
       label: "Standard",
-      price: Math.round(base * 2.5),
-      title: "Medium Design",
-      description: "Digitize medium complexity design up to 15,000 stitches",
-      delivery: "2-day delivery",
-      revisions: "Unlimited Revisions",
+      emoji: "🏆",
+      icon: Award,
+      price: Math.round(base * 2.5 * 100) / 100,
+      description: "Medium complexity — great for detailed logos & text",
+      delivery: "2 days",
+      revisions: "Unlimited",
       features: ["Up to 15,000 stitches", "All major formats", "2 revision rounds", "Run sheet included"],
+      color: "border-border hover:border-secondary/40",
+      activeColor: "border-secondary bg-secondary/5",
+      badge: "Most Popular",
     },
     {
       id: "premium",
       label: "Premium",
-      price: Math.round(base * 5),
-      title: "Complex Design",
-      description: "Fully complex design, 3D puff, patches, unlimited complexity",
-      delivery: "3-day delivery",
-      revisions: "Unlimited Revisions",
-      features: ["Unlimited stitches", "All major formats", "Unlimited revisions", "Run sheet + sew-out scan", "Priority support"],
+      emoji: "✨",
+      icon: Sparkles,
+      price: Math.round(base * 5 * 100) / 100,
+      description: "Complex designs, 3D puff, patches — no limits",
+      delivery: "3 days",
+      revisions: "Unlimited",
+      features: ["Unlimited stitches", "All formats + 3D puff", "Unlimited revisions", "Run sheet + sew-out scan", "Priority support"],
+      color: "border-border hover:border-amber-400/40",
+      activeColor: "border-amber-400 bg-amber-50",
+      badge: "Best Value",
     },
   ];
 }
 
-export default function GigPackagePanel({
-  gig,
-  properties,
-  userId,
-}: {
+export default function GigPackagePanel({ gig, properties, userId }: {
   gig: any;
   properties: any[];
   userId: string | null;
 }) {
   const router = useRouter();
   const supabase = createClient();
-
   const packages = buildPackages(gig);
-  const [activeTab, setActiveTab] = useState(0);
-  const [showOrderForm, setShowOrderForm] = useState(false);
+  const [selected, setSelected] = useState(0);
+  const [showForm, setShowForm] = useState(false);
   const [selections, setSelections] = useState<Record<string, any>>({});
   const [uploadedImage, setUploadedImage] = useState<any>(null);
   const [specialInstructions, setSpecialInstructions] = useState("");
@@ -73,46 +77,37 @@ export default function GigPackagePanel({
     const saved = localStorage.getItem(`pendingOrder_${gig.id}`);
     if (saved) {
       try {
-        const data = JSON.parse(saved);
-        setSelections(data.selections || {});
-        setSpecialInstructions(data.specialInstructions || "");
-        setUploadedImage(data.uploadedImage || null);
-        setShowOrderForm(true);
-      } catch (e) {}
+        const d = JSON.parse(saved);
+        setSelections(d.selections || {});
+        setSpecialInstructions(d.specialInstructions || "");
+        setUploadedImage(d.uploadedImage || null);
+        setShowForm(true);
+      } catch (_) {}
       localStorage.removeItem(`pendingOrder_${gig.id}`);
     }
   }, [gig.id]);
 
-  const pkg = packages[activeTab];
+  const pkg = packages[selected];
 
-  // Calculate price including property modifiers
   const totalPrice = useMemo(() => {
     let total = pkg.price;
-    Object.keys(selections).forEach((propId) => {
-      const selectedOptionId = selections[propId].optionId;
-      if (selectedOptionId) {
-        const prop = properties.find((p) => p.id === propId);
-        const option = prop?.gig_property_options?.find((o: any) => o.id === selectedOptionId);
-        if (option?.price_modifier) total += parseFloat(option.price_modifier);
+    Object.keys(selections).forEach(propId => {
+      const optId = selections[propId].optionId;
+      if (optId) {
+        const prop = properties.find(p => p.id === propId);
+        const opt = prop?.gig_property_options?.find((o: any) => o.id === optId);
+        if (opt?.price_modifier) total += parseFloat(opt.price_modifier);
       }
     });
     return total;
   }, [pkg.price, selections, properties]);
 
-  const handleSelection = (propId: string, value: string, isText = false) => {
-    setSelections((prev) => ({
-      ...prev,
-      [propId]: isText ? { textValue: value } : { optionId: value },
-    }));
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg("");
-
-    const missingRequired = properties.some((p) => p.is_required && !selections[p.id]);
-    if (missingRequired) { setErrorMsg("Please fill out all required fields."); return; }
-    if (!uploadedImage) { setErrorMsg("Please upload your source artwork."); return; }
+    const missing = properties.some(p => p.is_required && !selections[p.id]);
+    if (missing) { setErrorMsg("Please fill out all required fields."); return; }
+    if (!uploadedImage) { setErrorMsg("Please upload your artwork."); return; }
 
     if (!userId) {
       localStorage.setItem(`pendingOrder_${gig.id}`, JSON.stringify({ selections, specialInstructions, uploadedImage }));
@@ -122,22 +117,18 @@ export default function GigPackagePanel({
 
     setLoading(true);
     try {
-      const { data: order, error: orderError } = await supabase
+      const { data: order, error: oErr } = await supabase
         .from("orders")
         .insert([{ customer_id: userId, gig_id: gig.id, status: "pending", total_price: totalPrice, special_instructions: specialInstructions }])
         .select().single();
-      if (orderError) throw orderError;
+      if (oErr) throw oErr;
 
-      const detailsToInsert = Object.keys(selections).map((propId) => ({
-        order_id: order.id,
-        property_id: propId,
+      const details = Object.keys(selections).map(propId => ({
+        order_id: order.id, property_id: propId,
         selected_option_id: selections[propId].optionId || null,
         custom_text_value: selections[propId].textValue || null,
       }));
-      if (detailsToInsert.length > 0) {
-        const { error: dErr } = await supabase.from("order_details").insert(detailsToInsert);
-        if (dErr) throw dErr;
-      }
+      if (details.length > 0) { const { error } = await supabase.from("order_details").insert(details); if (error) throw error; }
 
       const { error: fErr } = await supabase.from("order_files").insert([{
         order_id: order.id,
@@ -151,118 +142,130 @@ export default function GigPackagePanel({
 
       router.push(`/orders/${order.id}`);
     } catch (err: any) {
-      setErrorMsg(err.message || "An error occurred while placing your order.");
+      setErrorMsg(err.message || "Error placing order. Please try again.");
       setLoading(false);
     }
   };
 
   return (
-    <div className="border border-gray-200 rounded-xl shadow-sm overflow-hidden bg-white">
+    <div className="space-y-4">
 
-      {/* Package Tabs */}
-      <div className="flex border-b border-gray-200">
+      {/* ── Package Cards (3 horizontal) */}
+      <div className="space-y-2">
+        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-widest mb-3">Select a Package</p>
         {packages.map((p, i) => (
           <button
             key={p.id}
-            onClick={() => setActiveTab(i)}
-            className={`flex-1 py-3 text-sm font-semibold transition-colors relative ${
-              activeTab === i
-                ? "text-gray-900 border-b-2 border-gray-900 -mb-px"
-                : "text-gray-500 hover:text-gray-700"
+            type="button"
+            onClick={() => { setSelected(i); setShowForm(false); }}
+            className={`w-full text-left rounded-2xl border-2 p-4 transition-all duration-200 ${
+              selected === i ? p.activeColor : p.color + " bg-white"
             }`}
           >
-            {p.label}
+            <div className="flex items-start justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <div className={`w-9 h-9 rounded-xl flex items-center justify-center text-lg flex-shrink-0 ${
+                  selected === i ? "bg-white shadow-sm" : "bg-accent/50"
+                }`}>
+                  {p.emoji}
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="font-bold text-sm text-foreground">{p.label}</span>
+                    {p.badge && (
+                      <span className="text-[10px] font-bold uppercase tracking-wide bg-secondary text-white px-1.5 py-0.5 rounded-full">
+                        {p.badge}
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-0.5 leading-snug">{p.description}</p>
+                </div>
+              </div>
+              <div className="text-right flex-shrink-0">
+                <p className="font-bold text-foreground text-base">US${p.price.toFixed(2)}</p>
+                <p className="text-[10px] text-muted-foreground">{p.delivery} delivery</p>
+              </div>
+            </div>
+
+            {selected === i && (
+              <div className="mt-3 pt-3 border-t border-border/50 grid grid-cols-2 gap-x-4 gap-y-1.5">
+                {p.features.map(f => (
+                  <div key={f} className="flex items-center gap-1.5 text-xs text-foreground/80">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-primary flex-shrink-0" />
+                    {f}
+                  </div>
+                ))}
+                <div className="flex items-center gap-1.5 text-xs text-foreground/80">
+                  <Clock className="w-3.5 h-3.5 text-primary flex-shrink-0" />
+                  {p.delivery} delivery
+                </div>
+                <div className="flex items-center gap-1.5 text-xs text-foreground/80">
+                  <Repeat2 className="w-3.5 h-3.5 text-primary flex-shrink-0" />
+                  {p.revisions} revisions
+                </div>
+              </div>
+            )}
           </button>
         ))}
       </div>
 
-      {/* Package Content */}
-      <div className="p-5">
-        <div className="flex items-start justify-between mb-1">
-          <span className="text-xs font-bold text-gray-500 uppercase tracking-widest">{pkg.label}</span>
-        </div>
-        <div className="text-2xl font-bold text-gray-900 mb-2">US${pkg.price}</div>
-        <p className="text-sm text-gray-600 mb-4 leading-relaxed">{pkg.description}</p>
-
-        {/* Delivery & Revisions */}
-        <div className="flex items-center gap-5 text-xs text-gray-600 mb-5">
-          <div className="flex items-center gap-1.5">
-            <Clock className="w-3.5 h-3.5" />
-            <span>{pkg.delivery}</span>
-          </div>
-          <div className="flex items-center gap-1.5">
-            <RefreshCw className="w-3.5 h-3.5" />
-            <span>{pkg.revisions}</span>
-          </div>
-        </div>
-
-        {/* Features */}
-        <ul className="space-y-2 mb-6">
-          {pkg.features.map((f) => (
-            <li key={f} className="flex items-center gap-2 text-sm text-gray-700">
-              <CheckCircle2 className="w-4 h-4 text-gray-800 flex-shrink-0" />
-              {f}
-            </li>
-          ))}
-        </ul>
-
-        {/* Continue / Order Button */}
-        {!showOrderForm ? (
-          <button
-            onClick={() => setShowOrderForm(true)}
-            className="w-full bg-gray-900 hover:bg-black text-white py-3 rounded-md font-semibold text-sm flex items-center justify-center gap-2 transition-colors"
-          >
-            Continue <ArrowRight className="w-4 h-4" />
-          </button>
-        ) : (
-          <button
-            onClick={() => setShowOrderForm(false)}
-            className="w-full bg-gray-900 text-white py-3 rounded-md font-semibold text-sm flex items-center justify-center gap-2"
-          >
-            <ChevronUp className="w-4 h-4" /> Hide Order Form
-          </button>
-        )}
-
-        {/* Contact button — opens floating chat */}
+      {/* ── CTA */}
+      {!showForm ? (
         <button
-          onClick={() => window.dispatchEvent(new CustomEvent("open-support-chat"))}
-          className="w-full mt-3 border border-gray-300 text-gray-700 hover:bg-gray-50 py-3 rounded-md font-semibold text-sm flex items-center justify-center gap-2 transition-colors"
+          onClick={() => setShowForm(true)}
+          className="w-full bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary text-white py-3.5 rounded-2xl font-bold text-sm flex items-center justify-center gap-2 shadow-md hover:shadow-lg transition-all"
         >
-          <MessageSquare className="w-4 h-4" /> Contact me
+          Continue with {pkg.label} — US${pkg.price.toFixed(2)} <ArrowRight className="w-4 h-4" />
         </button>
-      </div>
+      ) : (
+        <button
+          onClick={() => setShowForm(false)}
+          className="w-full bg-foreground text-white py-3 rounded-2xl font-bold text-sm"
+        >
+          ↑ Change Package
+        </button>
+      )}
 
-      {/* ── Expandable Order Form ── */}
-      {showOrderForm && (
-        <div className="border-t border-gray-200 bg-gray-50 p-5">
-          <h3 className="font-semibold text-sm text-gray-900 mb-4">Customize Your Order</h3>
-          <form onSubmit={handleSubmit} className="space-y-4">
+      {/* Contact me */}
+      <button
+        onClick={() => window.dispatchEvent(new CustomEvent("open-support-chat"))}
+        className="w-full border-2 border-border text-muted-foreground hover:border-primary hover:text-primary py-3 rounded-2xl font-semibold text-sm flex items-center justify-center gap-2 transition-all"
+      >
+        <MessageSquare className="w-4 h-4" /> Ask a question
+      </button>
 
+      {/* ── Order Form */}
+      {showForm && (
+        <div className="bg-white rounded-2xl border border-border shadow-sm overflow-hidden">
+          <div className="bg-gradient-to-r from-primary/10 to-secondary/10 px-5 py-3 border-b border-border">
+            <p className="font-bold text-sm text-foreground">{pkg.label} Package — US${pkg.price.toFixed(2)}</p>
+            <p className="text-xs text-muted-foreground">{pkg.description}</p>
+          </div>
+
+          <form onSubmit={handleSubmit} className="p-5 space-y-4">
             {errorMsg && (
-              <div className="bg-red-50 text-red-600 px-4 py-3 rounded-lg text-xs border border-red-100 flex items-start gap-2">
-                <X className="w-4 h-4 flex-shrink-0 mt-0.5" />
-                {errorMsg}
+              <div className="flex gap-2 bg-red-50 text-red-600 p-3 rounded-xl text-xs border border-red-100">
+                <X className="w-4 h-4 flex-shrink-0" /> {errorMsg}
               </div>
             )}
 
-            {/* Dynamic Properties */}
-            {properties.map((prop) => (
+            {properties.map(prop => (
               <div key={prop.id}>
-                <label className="block text-xs font-semibold text-gray-700 mb-1.5">
+                <label className="block text-xs font-semibold text-foreground mb-1.5">
                   {prop.property_name} {prop.is_required && <span className="text-red-500">*</span>}
                 </label>
 
-                {(prop.field_type === "select") && (
+                {prop.field_type === "select" && (
                   <select
                     required={prop.is_required}
-                    onChange={(e) => handleSelection(prop.id, e.target.value)}
                     value={selections[prop.id]?.optionId || ""}
-                    className="w-full text-sm border border-gray-300 rounded-md px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-gray-400"
+                    onChange={e => setSelections(p => ({ ...p, [prop.id]: { optionId: e.target.value } }))}
+                    className="w-full text-sm border border-border rounded-lg px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-primary/30"
                   >
                     <option value="" disabled>Select...</option>
-                    {prop.gig_property_options?.map((opt: any) => (
-                      <option key={opt.id} value={opt.id}>
-                        {opt.option_value}{opt.price_modifier > 0 ? ` (+$${opt.price_modifier})` : ""}
+                    {prop.gig_property_options?.map((o: any) => (
+                      <option key={o.id} value={o.id}>
+                        {o.option_value}{o.price_modifier > 0 ? ` (+$${o.price_modifier})` : ""}
                       </option>
                     ))}
                   </select>
@@ -270,65 +273,54 @@ export default function GigPackagePanel({
 
                 {prop.field_type === "radio" && (
                   <div className="space-y-1.5">
-                    {prop.gig_property_options?.map((opt: any) => (
-                      <label key={opt.id} className="flex items-center gap-2 text-sm cursor-pointer">
-                        <input
-                          type="radio"
-                          name={`prop_${prop.id}`}
-                          value={opt.id}
+                    {prop.gig_property_options?.map((o: any) => (
+                      <label key={o.id} className="flex items-center gap-2 text-sm cursor-pointer">
+                        <input type="radio" name={`prop_${prop.id}`} value={o.id}
                           required={prop.is_required}
-                          onChange={(e) => handleSelection(prop.id, e.target.value)}
-                          className="w-4 h-4"
-                        />
-                        {opt.option_value}
-                        {opt.price_modifier > 0 && <span className="text-xs text-gray-500">(+${opt.price_modifier})</span>}
+                          onChange={() => setSelections(p => ({ ...p, [prop.id]: { optionId: o.id } }))}
+                          className="text-primary" />
+                        <span>{o.option_value}</span>
+                        {o.price_modifier > 0 && <span className="text-xs text-muted-foreground ml-auto">+${o.price_modifier}</span>}
                       </label>
                     ))}
                   </div>
                 )}
 
                 {(prop.field_type === "text" || prop.field_type === "number") && (
-                  <input
-                    type={prop.field_type}
-                    required={prop.is_required}
-                    onChange={(e) => handleSelection(prop.id, e.target.value, true)}
-                    className="w-full text-sm border border-gray-300 rounded-md px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-gray-400"
+                  <input type={prop.field_type} required={prop.is_required}
+                    onChange={e => setSelections(p => ({ ...p, [prop.id]: { textValue: e.target.value } }))}
+                    className="w-full text-sm border border-border rounded-lg px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-primary/30"
                     placeholder={`Enter ${prop.property_name.toLowerCase()}...`}
                   />
                 )}
               </div>
             ))}
 
-            {/* Upload artwork */}
+            {/* Upload */}
             <div>
-              <label className="block text-xs font-semibold text-gray-700 mb-1.5">
-                Upload Artwork <span className="text-red-500">*</span>
+              <label className="block text-xs font-semibold text-foreground mb-1.5">
+                Upload Your Artwork <span className="text-red-500">*</span>
               </label>
               {uploadedImage ? (
-                <div className="flex items-center gap-3 p-3 border border-gray-200 rounded-lg bg-white">
-                  <img src={uploadedImage.secure_url} alt="" className="w-12 h-12 object-cover rounded-md flex-shrink-0" />
+                <div className="flex items-center gap-3 p-3 border border-green-200 bg-green-50 rounded-lg">
+                  <img src={uploadedImage.secure_url} alt="" className="w-10 h-10 object-cover rounded-md" />
                   <div className="flex-1 min-w-0">
-                    <p className="text-xs font-medium text-gray-700 truncate">{uploadedImage.original_filename}</p>
-                    <p className="text-xs text-green-600 flex items-center gap-1 mt-0.5">
-                      <CheckCircle2 className="w-3 h-3" /> Uploaded
-                    </p>
+                    <p className="text-xs font-medium text-foreground truncate">{uploadedImage.original_filename}</p>
+                    <p className="text-xs text-green-600 flex items-center gap-1 mt-0.5"><CheckCircle2 className="w-3 h-3" /> Uploaded</p>
                   </div>
-                  <button type="button" onClick={() => setUploadedImage(null)} className="text-red-400 hover:text-red-600 text-xs">
-                    Remove
-                  </button>
+                  <button type="button" onClick={() => setUploadedImage(null)} className="text-xs text-red-500 hover:text-red-700">Remove</button>
                 </div>
               ) : (
                 <CldUploadWidget
                   uploadPreset={process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET || "ml_default"}
-                  onSuccess={(result: any) => setUploadedImage(result.info)}
+                  onSuccess={(r: any) => setUploadedImage(r.info)}
                 >
                   {({ open }) => (
-                    <div
-                      onClick={() => open()}
-                      className="w-full h-24 border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center cursor-pointer hover:border-gray-500 hover:bg-gray-100 transition-colors text-gray-400 hover:text-gray-600"
+                    <div onClick={() => open()}
+                      className="w-full h-20 border-2 border-dashed border-border rounded-lg flex flex-col items-center justify-center cursor-pointer hover:border-primary hover:bg-primary/5 transition-colors text-muted-foreground hover:text-primary"
                     >
-                      <UploadCloud className="w-6 h-6 mb-1" />
-                      <span className="text-xs font-medium">Click to upload</span>
+                      <UploadCloud className="w-5 h-5 mb-1" />
+                      <span className="text-xs font-medium">Click to upload artwork</span>
                       <span className="text-[10px] mt-0.5">JPG, PNG, PDF, AI</span>
                     </div>
                   )}
@@ -336,34 +328,27 @@ export default function GigPackagePanel({
               )}
             </div>
 
-            {/* Special Instructions */}
+            {/* Instructions */}
             <div>
-              <label className="block text-xs font-semibold text-gray-700 mb-1.5">Special Instructions (Optional)</label>
-              <textarea
-                rows={3}
-                value={specialInstructions}
-                onChange={(e) => setSpecialInstructions(e.target.value)}
-                className="w-full text-sm border border-gray-300 rounded-md px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-gray-400 resize-none"
-                placeholder="Any specific requirements for your design..."
-              />
+              <label className="block text-xs font-semibold text-foreground mb-1.5">Special Instructions (Optional)</label>
+              <textarea rows={2} value={specialInstructions} onChange={e => setSpecialInstructions(e.target.value)}
+                className="w-full text-sm border border-border rounded-lg px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-primary/30 resize-none"
+                placeholder="Any specific requirements..." />
             </div>
 
-            {/* Price + Submit */}
-            <div className="flex items-center justify-between pt-3 border-t border-gray-200">
+            {/* Total + Submit */}
+            <div className="bg-accent/30 rounded-xl p-4 flex items-center justify-between">
               <div>
-                <p className="text-xs text-gray-500 uppercase tracking-wider font-semibold">Total</p>
-                <p className="text-xl font-bold text-gray-900">US${totalPrice.toFixed(2)}</p>
+                <p className="text-xs text-muted-foreground font-medium">Order Total</p>
+                <p className="text-2xl font-bold text-foreground">US${totalPrice.toFixed(2)}</p>
               </div>
-              <button
-                type="submit"
-                disabled={loading || !uploadedImage}
-                className="bg-gray-900 hover:bg-black text-white px-6 py-2.5 rounded-md font-semibold text-sm flex items-center gap-2 disabled:opacity-50 transition-colors"
+              <button type="submit" disabled={loading || !uploadedImage}
+                className="bg-gradient-to-r from-secondary to-secondary/80 text-white px-6 py-2.5 rounded-xl font-bold text-sm flex items-center gap-2 disabled:opacity-50 shadow-sm hover:shadow-md transition-all"
               >
-                {loading && <Loader2 className="w-4 h-4 animate-spin" />}
-                {loading ? "Placing..." : "Place Order"}
+                {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
+                {loading ? "Placing..." : "Place Order →"}
               </button>
             </div>
-
           </form>
         </div>
       )}
