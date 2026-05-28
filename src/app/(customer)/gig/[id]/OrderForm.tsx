@@ -82,15 +82,20 @@ export default function OrderForm({ gig, properties, userId }: { gig: any, prope
     setLoading(true);
 
     try {
+      // Calculate Delivery Date based on Gig's delivery_time_days
+      const deliveryDate = new Date();
+      deliveryDate.setDate(deliveryDate.getDate() + (gig.delivery_time_days || 1));
+
       // 1. Create Order
       const { data: order, error: orderError } = await supabase
         .from("orders")
         .insert([{
           customer_id: userId,
           gig_id: gig.id,
-          status: 'pending',
+          status: 'in_progress', // Starts the timer immediately
           total_price: totalPrice,
-          special_instructions: specialInstructions
+          special_instructions: specialInstructions,
+          delivery_date: deliveryDate.toISOString()
         }])
         .select()
         .single();

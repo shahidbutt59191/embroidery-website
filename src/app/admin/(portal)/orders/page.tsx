@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import Link from "next/link";
-import { Package, MessageSquare, ArrowRight, Clock, CheckCircle2, RotateCcw, Truck } from "lucide-react";
+import { Package, MessageSquare, ArrowRight, Clock, CheckCircle2, RotateCcw, Truck, LayoutList, Loader2, AlertCircle, TrendingUp, DollarSign } from "lucide-react";
 
 const STATUS_CONFIG: Record<string, { label: string; color: string }> = {
   pending:            { label: "Pending",           color: "bg-yellow-100 text-yellow-700" },
@@ -12,23 +12,104 @@ const STATUS_CONFIG: Record<string, { label: string; color: string }> = {
   cancelled:          { label: "Cancelled",         color: "bg-gray-100 text-gray-600"   },
 };
 
-export default async function AdminOrdersPage() {
+export default async function AdminOrdersPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>
+}) {
   const supabase = await createClient();
+  const { tab = "all" } = await searchParams;
 
-  const { data: orders, error } = await supabase
+  let query = supabase
     .from("orders")
     .select(`
-      id, status, total_price, created_at, special_instructions,
+      id, status, total_price, created_at, delivery_date, special_instructions,
       gigs (title, image_url),
       profiles!orders_customer_id_fkey (full_name, email)
     `)
     .order("created_at", { ascending: false });
 
+  if (tab !== "all") {
+    query = query.eq("status", tab);
+  }
+
+  const { data: orders, error } = await query;
+
+  const tabs = [
+    { id: "all", label: "All Orders" },
+    { id: "pending", label: "Pending" },
+    { id: "in_progress", label: "In Progress" },
+    { id: "delivered", label: "Delivered" },
+    { id: "completed", label: "Completed" },
+  ];
+
+  // Calculate Stats across ALL orders, so we need a separate query if tab is not "all", 
+  // but for simplicity we will just fetch all stats first.
+  const { data: allOrders } = await supabase.from("orders").select("status, total_price");
+  const stats = {
+    active: allOrders?.filter(o => o.status === "in_progress" || o.status === "pending").length || 0,
+    completed: allOrders?.filter(o => o.status === "completed" || o.status === "delivered").length || 0,
+    revenue: allOrders?.filter(o => o.status === "completed").reduce((sum, o) => sum + parseFloat(o.total_price), 0) || 0,
+  };
+
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold font-outfit text-primary">All Orders</h1>
-        <p className="text-muted-foreground mt-1">{orders?.length ?? 0} orders total</p>
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold font-outfit text-primary flex items-center gap-2">
+            <LayoutList className="w-8 h-8" />
+            Order Management
+          </h1>
+          <p className="text-muted-foreground mt-1">Manage and track customer orders</p>
+        </div>
+      </div>
+
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="bg-white p-5 rounded-2xl border border-border shadow-sm flex items-center gap-4">
+          <div className="w-12 h-12 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center">
+            <Package className="w-6 h-6" />
+          </div>
+          <div>
+            <p className="text-sm font-medium text-muted-foreground">Active Orders</p>
+            <p className="text-2xl font-bold text-foreground">{stats.active}</p>
+          </div>
+        </div>
+        <div className="bg-white p-5 rounded-2xl border border-border shadow-sm flex items-center gap-4">
+          <div className="w-12 h-12 bg-green-50 text-green-600 rounded-xl flex items-center justify-center">
+            <CheckCircle2 className="w-6 h-6" />
+          </div>
+          <div>
+            <p className="text-sm font-medium text-muted-foreground">Completed</p>
+            <p className="text-2xl font-bold text-foreground">{stats.completed}</p>
+          </div>
+        </div>
+        <div className="bg-white p-5 rounded-2xl border border-border shadow-sm flex items-center gap-4">
+          <div className="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center">
+            <DollarSign className="w-6 h-6" />
+          </div>
+          <div>
+            <p className="text-sm font-medium text-muted-foreground">Total Revenue</p>
+            <p className="text-2xl font-bold text-foreground">${stats.revenue.toFixed(2)}</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Tabs */}
+      <div className="flex overflow-x-auto pb-2 gap-2 border-b border-border">
+        {tabs.map(t => (
+          <Link
+            key={t.id}
+            href={`/admin/orders?tab=${t.id}`}
+            className={`px-4 py-2 font-medium text-sm rounded-t-xl transition-colors whitespace-nowrap border-b-2 ${
+              tab === t.id 
+                ? "border-primary text-primary bg-primary/5" 
+                : "border-transparent text-muted-foreground hover:bg-accent/10 hover:text-foreground"
+            }`}
+          >
+            {t.label}
+          </Link>
+        ))}
       </div>
 
       {error && (
@@ -58,11 +139,16 @@ export default async function AdminOrdersPage() {
                       <span className={`text-xs px-2.5 py-0.5 rounded-full font-semibold ${status.color}`}>
                         {status.label}
                       </span>
+                      {order.delivery_date && new Date(order.delivery_date).getTime() < new Date().getTime() + (24 * 60 * 60 * 1000) && order.status === "in_progress" && (
+                        <span className="text-[10px] uppercase tracking-wider font-bold bg-red-100 text-red-700 px-2 py-0.5 rounded-full flex items-center gap-1">
+                          <AlertCircle className="w-3 h-3" /> Priority
+                        </span>
+                      )}
                     </div>
                     <p className="text-sm text-muted-foreground">
                       Customer: <span className="font-medium text-foreground">{(order.profiles as any)?.full_name || (order.profiles as any)?.email || "Unknown"}</span>
                       <span className="mx-2">·</span>
-                      {new Date(order.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                      Placed: {new Date(order.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                     </p>
                     {order.special_instructions && (
                       <p className="text-xs text-muted-foreground mt-1 truncate max-w-lg italic">"{order.special_instructions}"</p>
