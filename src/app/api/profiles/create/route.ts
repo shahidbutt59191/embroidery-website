@@ -8,9 +8,17 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "User ID required" }, { status: 400 });
     }
 
-    const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    // Try to find the service key under various common names
+    const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY 
+                    || process.env.SUPABASE_SECRET_KEY
+                    || Object.values(process.env).find(val => val && val.startsWith('sb_secret_'));
+
     if (!serviceKey) {
-      return NextResponse.json({ error: "Service role key not configured. Please add SUPABASE_SERVICE_ROLE_KEY to your environment variables." }, { status: 500 });
+      // For debugging, let's see what SUPABASE keys actually exist (safely hiding the values)
+      const existingKeys = Object.keys(process.env).filter(k => k.includes('SUPABASE') || k.includes('SECRET'));
+      return NextResponse.json({ 
+        error: `Service role key not found! I only found these keys: ${existingKeys.join(', ')}. Please make sure you added SUPABASE_SERVICE_ROLE_KEY and Redeployed.` 
+      }, { status: 500 });
     }
     
     // Create admin client that bypasses RLS
