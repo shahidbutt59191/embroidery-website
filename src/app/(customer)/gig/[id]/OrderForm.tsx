@@ -82,9 +82,9 @@ export default function OrderForm({ gig, properties, userId }: { gig: any, prope
     setLoading(true);
 
     try {
-      // Calculate Delivery Date based on Gig's delivery_time_days
+      // Calculate Delivery Date (Hardcoded to 30 days for DEMO)
       const deliveryDate = new Date();
-      deliveryDate.setDate(deliveryDate.getDate() + (gig.delivery_time_days || 1));
+      deliveryDate.setDate(deliveryDate.getDate() + 30);
 
       // 1. Create Order
       const { data: order, error: orderError } = await supabase
@@ -95,7 +95,8 @@ export default function OrderForm({ gig, properties, userId }: { gig: any, prope
           status: 'in_progress', // Starts the timer immediately
           total_price: totalPrice,
           special_instructions: specialInstructions,
-          delivery_date: deliveryDate.toISOString()
+          delivery_date: deliveryDate.toISOString(),
+          delivery_deadline: deliveryDate.toISOString()
         }])
         .select()
         .single();
