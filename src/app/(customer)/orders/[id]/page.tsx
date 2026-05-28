@@ -69,9 +69,9 @@ export default async function OrderDetailsPage({ params }: { params: Promise<{ i
               <div>
                 <h1 className="text-2xl font-bold font-outfit text-primary mb-1">Order #{order.id.split('-')[0]}</h1>
                 <p className="text-sm text-muted-foreground">Placed on {new Date(order.created_at).toLocaleDateString()}</p>
-                {order.status === 'in_progress' && (
+                {order.status === 'in_progress' && order.delivery_deadline && (
                   <div className="mt-4">
-                    <CountdownTimer deadline={new Date(new Date(order.created_at).getTime() + 30 * 24 * 60 * 60 * 1000).toISOString()} />
+                    <CountdownTimer deadline={order.delivery_deadline} />
                   </div>
                 )}
               </div>

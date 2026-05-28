@@ -19,7 +19,8 @@ export default function AdminOrderActions({ orderId, currentStatus }: { orderId:
     const { error } = await supabase
       .from("orders")
       .update({ 
-        status: "in_progress"
+        status: "in_progress",
+        delivery_deadline: deadline
       })
       .eq("id", orderId);
 
