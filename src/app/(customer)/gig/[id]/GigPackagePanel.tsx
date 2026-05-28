@@ -120,7 +120,6 @@ export default function GigPackagePanel({ gig, properties, userId }: {
         .from("orders")
         .insert([{ 
           customer_id: userId, 
-          seller_id: gig.seller_id,
           gig_id: gig.id, 
           status: "pending", 
           total_price: totalPrice, 
