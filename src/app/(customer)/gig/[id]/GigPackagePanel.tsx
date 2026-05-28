@@ -105,10 +105,6 @@ export default function GigPackagePanel({ gig, properties, userId }: {
 
     setLoading(true);
     try {
-      // 30 day timer fallback if needed, but normally handled by admin Accept Order
-      const deliveryDate = new Date();
-      deliveryDate.setDate(deliveryDate.getDate() + 30); 
-
       const { data: order, error: oErr } = await supabase
         .from("orders")
         .insert([{ 
@@ -116,8 +112,7 @@ export default function GigPackagePanel({ gig, properties, userId }: {
           gig_id: gig.id, 
           status: "pending", 
           total_price: totalPrice, 
-          special_instructions: specialInstructions,
-          delivery_date: deliveryDate.toISOString()
+          special_instructions: specialInstructions
         }])
         .select().single();
       if (oErr) throw oErr;

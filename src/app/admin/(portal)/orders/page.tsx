@@ -24,7 +24,7 @@ export default async function AdminOrdersPage({
   let query = supabase
     .from("orders")
     .select(`
-      id, status, total_price, created_at, delivery_date, delivery_deadline, special_instructions,
+      id, status, total_price, created_at, delivery_deadline, special_instructions,
       gigs (title, image_url),
       profiles!orders_customer_id_fkey (full_name, email)
     `)
