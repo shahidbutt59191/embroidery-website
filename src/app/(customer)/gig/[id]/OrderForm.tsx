@@ -95,7 +95,6 @@ export default function OrderForm({ gig, properties, userId }: { gig: any, prope
           status: 'in_progress', // Starts the timer immediately
           total_price: totalPrice,
           special_instructions: specialInstructions,
-          delivery_date: deliveryDate.toISOString(),
           delivery_deadline: deliveryDate.toISOString()
         }])
         .select()

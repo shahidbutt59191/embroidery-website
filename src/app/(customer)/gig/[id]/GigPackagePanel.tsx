@@ -116,7 +116,6 @@ export default function GigPackagePanel({ gig, properties, userId }: {
           status: "in_progress", 
           total_price: totalPrice, 
           special_instructions: specialInstructions,
-          delivery_date: deliveryDate.toISOString(),
           delivery_deadline: deliveryDate.toISOString()
         }])
         .select().single();
