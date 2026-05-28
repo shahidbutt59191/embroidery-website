@@ -19,7 +19,7 @@ export default async function AdminChatPage({
   // Fetch all orders with customer info
   const { data: orders } = await supabase
     .from("orders")
-    .select(`id, status, total_price, created_at, gigs (title), profiles!orders_customer_id_fkey (full_name, email)`)
+    .select(`id, status, total_price, created_at, gigs (title), profiles!customer_id (full_name, email)`)
     .not("status", "eq", "cancelled")
     .order("created_at", { ascending: false });
 

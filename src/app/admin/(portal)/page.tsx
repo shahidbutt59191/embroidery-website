@@ -15,7 +15,7 @@ export default async function AdminDashboardPage() {
     supabase.from("orders").select("*", { count: "exact", head: true }).eq("status", "pending"),
     supabase.from("orders").select("*", { count: "exact", head: true }).eq("status", "completed"),
     supabase.from("orders")
-      .select(`id, status, total_price, created_at, gigs(title), profiles!orders_customer_id_fkey(full_name)`)
+      .select(`id, status, total_price, created_at, gigs(title), profiles!customer_id(full_name, email)`)
       .order("created_at", { ascending: false })
       .limit(5),
   ]);
