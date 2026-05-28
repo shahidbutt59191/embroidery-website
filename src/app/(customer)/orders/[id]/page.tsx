@@ -23,7 +23,7 @@ export default async function OrderDetailsPage({ params }: { params: Promise<{ i
   const { data: order, error: orderError } = await supabase
     .from("orders")
     .select(`
-      id, status, price, created_at, requirements, delivery_date,
+      id, status, price, created_at, requirements, delivery_date, buyer_id,
       gigs (title, image_url),
       order_details (
         custom_text_value,
