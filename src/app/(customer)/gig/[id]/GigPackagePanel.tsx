@@ -112,8 +112,6 @@ export default function GigPackagePanel({ gig, properties, userId }: {
         .from("orders")
         .insert([{ 
           customer_id: userId, 
-          buyer_id: userId,
-          seller_id: gig.seller_id,
           gig_id: gig.id, 
           status: "in_progress", 
           total_price: totalPrice, 
