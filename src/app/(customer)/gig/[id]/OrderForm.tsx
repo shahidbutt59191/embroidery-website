@@ -90,7 +90,9 @@ export default function OrderForm({ gig, properties, userId }: { gig: any, prope
       const { data: order, error: orderError } = await supabase
         .from("orders")
         .insert([{
-          customer_id: userId,
+          customer_id: userId,     // Keeping this in case some components rely on it
+          buyer_id: userId,        // Added to satisfy constraint
+          seller_id: gig.seller_id, // Added to satisfy constraint
           gig_id: gig.id,
           status: 'in_progress', // Starts the timer immediately
           total_price: totalPrice,
