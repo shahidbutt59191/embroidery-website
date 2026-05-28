@@ -105,19 +105,14 @@ export default function GigPackagePanel({ gig, properties, userId }: {
 
     setLoading(true);
     try {
-      // 2. Create the order using all possible column names (PostgREST safely ignores the ones that don't exist in the current schema)
       const { data: order, error: oErr } = await supabase
         .from("orders")
         .insert([{ 
           customer_id: userId, 
-          buyer_id: userId,
-          seller_id: gig.seller_id,
           gig_id: gig.id, 
           status: "pending", 
           total_price: totalPrice, 
-          price: totalPrice,
-          special_instructions: specialInstructions,
-          requirements: specialInstructions
+          special_instructions: specialInstructions
         }])
         .select().single();
       if (oErr) throw oErr;
