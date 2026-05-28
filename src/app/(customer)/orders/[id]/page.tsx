@@ -23,7 +23,7 @@ export default async function OrderDetailsPage({ params }: { params: Promise<{ i
   const { data: order, error: orderError } = await supabase
     .from("orders")
     .select(`
-      id, status, total_price, created_at, special_instructions, delivery_deadline, buyer_id, customer_id,
+      id, status, total_price, created_at, special_instructions, delivery_deadline, customer_id,
       gigs (title, image_url),
       order_details (
         custom_text_value,
@@ -41,7 +41,7 @@ export default async function OrderDetailsPage({ params }: { params: Promise<{ i
 
   // Ensure user owns the order or is an admin.
   // (In a real app with strict RLS, the query above would just fail if they aren't authorized).
-  if (order.customer_id !== user.id && order.buyer_id !== user.id) {
+  if (order.customer_id !== user.id) {
     // If not the customer, verify they are admin
     const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single();
     if (!profile || profile.role !== 'admin') {
