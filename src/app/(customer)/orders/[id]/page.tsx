@@ -23,7 +23,7 @@ export default async function OrderDetailsPage({ params }: { params: Promise<{ i
   const { data: order, error: orderError } = await supabase
     .from("orders")
     .select(`
-      *,
+      id, status, price, created_at, requirements, delivery_date,
       gigs (title, image_url),
       order_details (
         custom_text_value,
@@ -41,7 +41,7 @@ export default async function OrderDetailsPage({ params }: { params: Promise<{ i
 
   // Ensure user owns the order or is an admin.
   // (In a real app with strict RLS, the query above would just fail if they aren't authorized).
-  if (order.customer_id !== user.id) {
+  if (order.buyer_id !== user.id) {
     // If not the customer, verify they are admin
     const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single();
     if (!profile || profile.role !== 'admin') {
@@ -69,9 +69,9 @@ export default async function OrderDetailsPage({ params }: { params: Promise<{ i
               <div>
                 <h1 className="text-2xl font-bold font-outfit text-primary mb-1">Order #{order.id.split('-')[0]}</h1>
                 <p className="text-sm text-muted-foreground">Placed on {new Date(order.created_at).toLocaleDateString()}</p>
-                {order.status === 'in_progress' && order.delivery_deadline && (
+                {order.status === 'in_progress' && order.delivery_date && (
                   <div className="mt-4">
-                    <CountdownTimer deadline={order.delivery_deadline} />
+                    <CountdownTimer deadline={order.delivery_date} />
                   </div>
                 )}
               </div>
@@ -94,7 +94,7 @@ export default async function OrderDetailsPage({ params }: { params: Promise<{ i
                 <img src={(order.gigs as any)?.image_url} alt="Gig" className="w-16 h-16 rounded-lg object-cover" />
                 <div>
                   <h2 className="font-bold text-lg text-foreground">{(order.gigs as any)?.title}</h2>
-                  <p className="font-semibold text-primary">Total: ${order.total_price}</p>
+                  <p className="font-semibold text-primary">Total: ${order.price}</p>
                 </div>
               </div>
               
@@ -112,10 +112,10 @@ export default async function OrderDetailsPage({ params }: { params: Promise<{ i
                   ))}
                 </ul>
 
-                {order.special_instructions && (
+                {order.requirements && (
                   <div className="mt-6 p-4 bg-accent/20 rounded-xl border border-border">
                     <h4 className="text-sm font-semibold text-foreground mb-1">Special Instructions:</h4>
-                    <p className="text-sm text-muted-foreground">{order.special_instructions}</p>
+                    <p className="text-sm text-muted-foreground">{order.requirements || 'None provided'}</p>
                   </div>
                 )}
               </div>

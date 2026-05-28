@@ -24,9 +24,9 @@ export default async function AdminOrdersPage({
   let query = supabase
     .from("orders")
     .select(`
-      id, status, total_price, created_at, delivery_deadline, special_instructions,
+      id, status, price, created_at, delivery_date, requirements,
       gigs (title, image_url),
-      profiles!orders_customer_id_fkey (full_name, email)
+      profiles!orders_buyer_id_fkey (full_name, email)
     `)
     .order("created_at", { ascending: false });
 
@@ -136,12 +136,13 @@ export default async function AdminOrdersPage({
                   />
                   <div className="flex-1 min-w-0">
                     <div className="flex flex-wrap items-center gap-2 mb-1">
+                      <span className="font-semibold text-lg">${order.price}</span>
                       <h3 className="font-bold text-foreground">{(order.gigs as any)?.title}</h3>
                       <span className={`text-xs px-2.5 py-0.5 rounded-full font-semibold ${status.color}`}>
                         {status.label}
                       </span>
-                      {order.delivery_deadline && order.status === "in_progress" && (
-                        <CountdownTimer deadline={order.delivery_deadline} />
+                      {order.delivery_date && order.status === "in_progress" && (
+                        <CountdownTimer deadline={order.delivery_date} />
                       )}
                     </div>
                     <p className="text-sm text-muted-foreground">
@@ -149,12 +150,13 @@ export default async function AdminOrdersPage({
                       <span className="mx-2">·</span>
                       Placed: {new Date(order.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                     </p>
-                    {order.special_instructions && (
-                      <p className="text-xs text-muted-foreground mt-1 truncate max-w-lg italic">"{order.special_instructions}"</p>
-                    )}
+                    <h4 className="text-sm font-semibold mb-2 mt-2">Requirements</h4>
+                    <p className="text-sm text-muted-foreground bg-muted p-3 rounded-lg border">
+                      {order.requirements || "No special instructions provided."}
+                    </p>
                   </div>
                   <div className="flex items-center gap-4 flex-shrink-0">
-                    <span className="text-xl font-bold text-foreground">${parseFloat(order.total_price).toFixed(2)}</span>
+                    <span className="text-xl font-bold text-foreground">${parseFloat(order.price).toFixed(2)}</span>
                     <div className="flex gap-2">
                       <Link
                         href={`/admin/chat?order=${order.id}`}

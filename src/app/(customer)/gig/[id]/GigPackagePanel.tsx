@@ -105,14 +105,23 @@ export default function GigPackagePanel({ gig, properties, userId }: {
 
     setLoading(true);
     try {
+      // 1. Upsert profile to ensure the foreign key constraint is satisfied!
+      await supabase.from("profiles").upsert({
+        id: userId,
+        full_name: "Customer", // Fallback name
+        role: "buyer"
+      }, { onConflict: "id" });
+
+      // 2. Create the order using the database's existing column names
       const { data: order, error: oErr } = await supabase
         .from("orders")
         .insert([{ 
-          customer_id: userId, 
+          buyer_id: userId, 
+          seller_id: gig.seller_id,
           gig_id: gig.id, 
           status: "pending", 
-          total_price: totalPrice, 
-          special_instructions: specialInstructions
+          price: totalPrice, 
+          requirements: specialInstructions
         }])
         .select().single();
       if (oErr) throw oErr;
