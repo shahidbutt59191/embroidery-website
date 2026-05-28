@@ -159,7 +159,7 @@ export default async function OrderDetailsPage({ params }: { params: Promise<{ i
             {isAdmin && <AdminOrderActions orderId={order.id} currentStatus={order.status} />}
             {isAdmin && order.status === 'in_progress' && <AdminFileUploader orderId={order.id} adminId={user.id} />}
             {!isAdmin && order.status === 'delivered' && (
-              <CustomerApprovalCard orderId={order.id} userId={user.id} totalPrice={order.total_price} />
+              <CustomerApprovalCard orderId={order.id} userId={user.id} totalPrice={order.price} />
             )}
             
           </div>
