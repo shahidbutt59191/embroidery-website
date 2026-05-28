@@ -109,12 +109,11 @@ export default function GigPackagePanel({ gig, properties, userId }: {
       const { data: order, error: oErr } = await supabase
         .from("orders")
         .insert([{ 
-          buyer_id: userId, 
-          seller_id: gig.seller_id,
+          customer_id: userId, 
           gig_id: gig.id, 
           status: "pending", 
-          price: totalPrice, 
-          requirements: specialInstructions
+          total_price: totalPrice, 
+          special_instructions: specialInstructions
         }])
         .select().single();
       if (oErr) throw oErr;

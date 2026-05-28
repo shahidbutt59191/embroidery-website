@@ -23,7 +23,7 @@ export default async function OrderDetailsPage({ params }: { params: Promise<{ i
   const { data: order, error: orderError } = await supabase
     .from("orders")
     .select(`
-      id, status, price, created_at, requirements, delivery_date, buyer_id,
+      id, status, total_price, created_at, special_instructions, delivery_deadline, buyer_id, customer_id,
       gigs (title, image_url),
       order_details (
         custom_text_value,
@@ -41,7 +41,7 @@ export default async function OrderDetailsPage({ params }: { params: Promise<{ i
 
   // Ensure user owns the order or is an admin.
   // (In a real app with strict RLS, the query above would just fail if they aren't authorized).
-  if (order.buyer_id !== user.id) {
+  if (order.customer_id !== user.id && order.buyer_id !== user.id) {
     // If not the customer, verify they are admin
     const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single();
     if (!profile || profile.role !== 'admin') {
@@ -69,9 +69,9 @@ export default async function OrderDetailsPage({ params }: { params: Promise<{ i
               <div>
                 <h1 className="text-2xl font-bold font-outfit text-primary mb-1">Order #{order.id.split('-')[0]}</h1>
                 <p className="text-sm text-muted-foreground">Placed on {new Date(order.created_at).toLocaleDateString()}</p>
-                {order.status === 'in_progress' && order.delivery_date && (
+                {order.status === 'in_progress' && order.delivery_deadline && (
                   <div className="mt-4">
-                    <CountdownTimer deadline={order.delivery_date} />
+                    <CountdownTimer deadline={order.delivery_deadline} />
                   </div>
                 )}
               </div>
@@ -94,7 +94,7 @@ export default async function OrderDetailsPage({ params }: { params: Promise<{ i
                 <img src={(order.gigs as any)?.image_url} alt="Gig" className="w-16 h-16 rounded-lg object-cover" />
                 <div>
                   <h2 className="font-bold text-lg text-foreground">{(order.gigs as any)?.title}</h2>
-                  <p className="font-semibold text-primary">Total: ${order.price}</p>
+                  <p className="font-semibold text-primary">Total: ${order.total_price}</p>
                 </div>
               </div>
               
@@ -112,10 +112,10 @@ export default async function OrderDetailsPage({ params }: { params: Promise<{ i
                   ))}
                 </ul>
 
-                {order.requirements && (
+                {order.special_instructions && (
                   <div className="mt-6 p-4 bg-accent/20 rounded-xl border border-border">
                     <h4 className="text-sm font-semibold text-foreground mb-1">Special Instructions:</h4>
-                    <p className="text-sm text-muted-foreground">{order.requirements || 'None provided'}</p>
+                    <p className="text-sm text-muted-foreground">{order.special_instructions || 'None provided'}</p>
                   </div>
                 )}
               </div>
@@ -159,7 +159,7 @@ export default async function OrderDetailsPage({ params }: { params: Promise<{ i
             {isAdmin && <AdminOrderActions orderId={order.id} currentStatus={order.status} />}
             {isAdmin && order.status === 'in_progress' && <AdminFileUploader orderId={order.id} adminId={user.id} />}
             {!isAdmin && order.status === 'delivered' && (
-              <CustomerApprovalCard orderId={order.id} userId={user.id} totalPrice={order.price} />
+              <CustomerApprovalCard orderId={order.id} userId={user.id} totalPrice={order.total_price} />
             )}
             
           </div>

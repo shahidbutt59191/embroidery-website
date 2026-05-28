@@ -20,7 +20,7 @@ export default function AdminOrderActions({ orderId, currentStatus }: { orderId:
       .from("orders")
       .update({ 
         status: "in_progress",
-        delivery_date: deadline
+        delivery_deadline: deadline
       })
       .eq("id", orderId);
 
