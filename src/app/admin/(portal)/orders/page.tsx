@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import Link from "next/link";
 import { Package, MessageSquare, ArrowRight, Clock, CheckCircle2, RotateCcw, Truck, LayoutList, Loader2, AlertCircle, TrendingUp, DollarSign } from "lucide-react";
+import CountdownTimer from "@/components/ui/CountdownTimer";
 
 const STATUS_CONFIG: Record<string, { label: string; color: string }> = {
   pending:            { label: "Pending",           color: "bg-yellow-100 text-yellow-700" },
@@ -23,7 +24,7 @@ export default async function AdminOrdersPage({
   let query = supabase
     .from("orders")
     .select(`
-      id, status, total_price, created_at, delivery_date, special_instructions,
+      id, status, total_price, created_at, delivery_date, delivery_deadline, special_instructions,
       gigs (title, image_url),
       profiles!orders_customer_id_fkey (full_name, email)
     `)
@@ -139,10 +140,8 @@ export default async function AdminOrdersPage({
                       <span className={`text-xs px-2.5 py-0.5 rounded-full font-semibold ${status.color}`}>
                         {status.label}
                       </span>
-                      {order.delivery_date && new Date(order.delivery_date).getTime() < new Date().getTime() + (24 * 60 * 60 * 1000) && order.status === "in_progress" && (
-                        <span className="text-[10px] uppercase tracking-wider font-bold bg-red-100 text-red-700 px-2 py-0.5 rounded-full flex items-center gap-1">
-                          <AlertCircle className="w-3 h-3" /> Priority
-                        </span>
+                      {order.delivery_deadline && order.status === "in_progress" && (
+                        <CountdownTimer deadline={order.delivery_deadline} />
                       )}
                     </div>
                     <p className="text-sm text-muted-foreground">

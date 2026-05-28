@@ -5,7 +5,8 @@ import { ArrowLeft, CheckCircle2, Package, Clock, Download } from "lucide-react"
 import OrderChat from "./OrderChat";
 import AdminFileUploader from "./AdminUploader";
 import CustomerApprovalCard from "./CustomerApprovalCard";
-import OrderTimer from "@/components/admin/OrderTimer";
+import CountdownTimer from "@/components/ui/CountdownTimer";
+import AdminOrderActions from "./AdminOrderActions";
 
 export default async function OrderDetailsPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = await params;
@@ -68,9 +69,9 @@ export default async function OrderDetailsPage({ params }: { params: Promise<{ i
               <div>
                 <h1 className="text-2xl font-bold font-outfit text-primary mb-1">Order #{order.id.split('-')[0]}</h1>
                 <p className="text-sm text-muted-foreground">Placed on {new Date(order.created_at).toLocaleDateString()}</p>
-                {order.status === 'in_progress' && order.delivery_date && (
+                {order.status === 'in_progress' && order.delivery_deadline && (
                   <div className="mt-4">
-                    <OrderTimer deadline={order.delivery_date} />
+                    <CountdownTimer deadline={order.delivery_deadline} />
                   </div>
                 )}
               </div>
@@ -155,7 +156,8 @@ export default async function OrderDetailsPage({ params }: { params: Promise<{ i
               </div>
             </div>
             
-            {isAdmin && <AdminFileUploader orderId={order.id} adminId={user.id} />}
+            {isAdmin && <AdminOrderActions orderId={order.id} currentStatus={order.status} />}
+            {isAdmin && order.status === 'in_progress' && <AdminFileUploader orderId={order.id} adminId={user.id} />}
             {!isAdmin && order.status === 'delivered' && (
               <CustomerApprovalCard orderId={order.id} userId={user.id} totalPrice={order.total_price} />
             )}
