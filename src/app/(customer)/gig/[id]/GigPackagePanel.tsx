@@ -105,19 +105,6 @@ export default function GigPackagePanel({ gig, properties, userId }: {
 
     setLoading(true);
     try {
-      // 1. Ensure the user profile exists by calling our secure admin API route
-      // This bypasses RLS which is currently blocking profile creation
-      const profileRes = await fetch("/api/profiles/create", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId })
-      });
-      
-      const profileData = await profileRes.json();
-      if (!profileRes.ok) {
-        throw new Error(profileData.error || "Failed to create user profile. Ensure SUPABASE_SERVICE_ROLE_KEY is set in Vercel.");
-      }
-
       // 2. Create the order using all possible column names (PostgREST safely ignores the ones that don't exist in the current schema)
       const { data: order, error: oErr } = await supabase
         .from("orders")
