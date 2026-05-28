@@ -105,6 +105,17 @@ export default function GigPackagePanel({ gig, properties, userId }: {
 
     setLoading(true);
     try {
+      // 1. Ensure profile exists using the authenticated client
+      const { error: pErr } = await supabase.from("profiles").upsert({
+        id: userId,
+        full_name: "Customer",
+        role: "buyer"
+      });
+      
+      if (pErr) {
+        throw new Error("Profile Creation Failed: " + pErr.message);
+      }
+
       const { data: order, error: oErr } = await supabase
         .from("orders")
         .insert([{ 
