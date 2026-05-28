@@ -24,7 +24,7 @@ export default async function AdminOrdersPage({
   let query = supabase
     .from("orders")
     .select(`
-      id, status, total_price, created_at, delivery_date, delivery_deadline, special_instructions,
+      id, status, total_price, created_at, special_instructions,
       gigs (title, image_url),
       profiles!customer_id (full_name, email)
     `)
@@ -140,8 +140,8 @@ export default async function AdminOrdersPage({
                       <span className={`text-xs px-2.5 py-0.5 rounded-full font-semibold ${status.color}`}>
                         {status.label}
                       </span>
-                      {order.delivery_deadline && order.status === "in_progress" && (
-                        <CountdownTimer deadline={order.delivery_deadline} />
+                      {order.status === "in_progress" && (
+                        <CountdownTimer deadline={new Date(new Date(order.created_at).getTime() + 30 * 24 * 60 * 60 * 1000).toISOString()} />
                       )}
                     </div>
                     <p className="text-sm text-muted-foreground">

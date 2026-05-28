@@ -115,8 +115,7 @@ export default function GigPackagePanel({ gig, properties, userId }: {
           gig_id: gig.id, 
           status: "in_progress", 
           total_price: totalPrice, 
-          special_instructions: specialInstructions,
-          delivery_deadline: deliveryDate.toISOString()
+          special_instructions: specialInstructions
         }])
         .select().single();
       if (oErr) throw oErr;
