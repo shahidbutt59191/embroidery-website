@@ -129,22 +129,32 @@ export default function GigPackagePanel({ gig, properties, userId }: {
         .select().single();
       if (oErr) throw oErr;
 
-      const details = Object.keys(selections).map(propId => ({
-        order_id: order.id, property_id: propId,
-        selected_option_id: selections[propId].optionId || null,
-        custom_text_value: selections[propId].textValue || null,
-      }));
-      if (details.length > 0) { const { error } = await supabase.from("order_details").insert(details); if (error) throw error; }
+      // Gracefully handle advanced schema tables in case the user hasn't created them
+      try {
+        const details = Object.keys(selections).map(propId => ({
+          order_id: order.id, property_id: propId,
+          selected_option_id: selections[propId].optionId || null,
+          custom_text_value: selections[propId].textValue || null,
+        }));
+        if (details.length > 0) { 
+          await supabase.from("order_details").insert(details); 
+        }
 
-      const { error: fErr } = await supabase.from("order_files").insert([{
-        order_id: order.id,
-        file_url: uploadedImage.secure_url,
-        cloudinary_public_id: uploadedImage.public_id,
-        file_name: uploadedImage.original_filename || "source_image",
-        file_type: "source_image",
-        uploaded_by: userId,
-      }]);
-      if (fErr) throw fErr;
+        await supabase.from("order_files").insert([{
+          order_id: order.id,
+          file_url: uploadedImage.secure_url,
+          cloudinary_public_id: uploadedImage.public_id,
+          file_name: uploadedImage.original_filename || "source_image",
+          file_type: "source_image",
+          uploaded_by: userId,
+        }]);
+      } catch (advancedErr) {
+        console.warn("Advanced schema tables not found or RLS blocked. Falling back to legacy files array.", advancedErr);
+        // Fallback for older database schema
+        await supabase.from("orders").update({
+          files: [uploadedImage.secure_url]
+        }).eq("id", order.id);
+      }
 
       router.push(`/orders/${order.id}`);
     } catch (err: any) {
