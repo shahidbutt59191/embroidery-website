@@ -118,15 +118,19 @@ export default function GigPackagePanel({ gig, properties, userId }: {
         throw new Error(profileData.error || "Failed to create user profile. Ensure SUPABASE_SERVICE_ROLE_KEY is set in Vercel.");
       }
 
-      // 2. Create the order using the database's existing column names
+      // 2. Create the order using all possible column names (PostgREST safely ignores the ones that don't exist in the current schema)
       const { data: order, error: oErr } = await supabase
         .from("orders")
         .insert([{ 
           customer_id: userId, 
+          buyer_id: userId,
+          seller_id: gig.seller_id,
           gig_id: gig.id, 
           status: "pending", 
           total_price: totalPrice, 
-          special_instructions: specialInstructions
+          price: totalPrice,
+          special_instructions: specialInstructions,
+          requirements: specialInstructions
         }])
         .select().single();
       if (oErr) throw oErr;
